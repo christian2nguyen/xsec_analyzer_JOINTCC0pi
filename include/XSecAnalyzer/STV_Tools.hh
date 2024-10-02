@@ -78,6 +78,7 @@ public:
   double ReturnPnPar() {return fPnPar;}
   double ReturnThetaMuHadron() {return fThetaMuP;}
   double ReturnThetaPMuNu() {return fThetaPMuNu;}
+
 };
 
 #endif
