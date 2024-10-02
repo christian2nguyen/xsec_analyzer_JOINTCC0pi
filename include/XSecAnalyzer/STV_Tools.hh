@@ -41,6 +41,7 @@ private:
   double fPnPerpy;				
   double fPnPar;
   double fThetaMuP;
+  double fThetaPMuNu;
   
 public:
   
@@ -76,6 +77,8 @@ public:
   double ReturnPnPerpy() {return fPnPerpy;}
   double ReturnPnPar() {return fPnPar;}
   double ReturnThetaMuHadron() {return fThetaMuP;}
+  double ReturnThetaPMuNu() {return fThetaPMuNu;}
+
 };
 
 #endif

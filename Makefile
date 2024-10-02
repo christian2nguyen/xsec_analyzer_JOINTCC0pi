@@ -33,7 +33,8 @@ CXXFLAGS := $(shell root-config --cflags) -O3 -I$(INCLUDE_DIR)
 LDFLAGS := $(shell root-config --libs) -L$(LIB_DIR) -lXSecAnalyzer
 
 # Source files to use when building the main shared library
-SHARED_SOURCES := $(wildcard src/selections/*.cxx)
+SHARED_SOURCES := $(wildcard src/binning/*.cxx)
+SHARED_SOURCES += $(wildcard src/selections/*.cxx)
 SHARED_SOURCES += $(wildcard src/utils/*.cxx)
 
 # Object files that will be included in the shared library
@@ -44,7 +45,7 @@ SHARED_OBJECTS := $(SHARED_SOURCES:.cxx=.o)
 .INTERMEDIATE: $(ROOT_DICTIONARY)
 
 all: $(SHARED_LIB) bin/ProcessNTuples bin/univmake bin/SlicePlots \
-  bin/Unfolder bin/BinScheme
+  bin/Unfolder bin/BinScheme bin/StandaloneUnfold
 
 $(ROOT_DICTIONARY):
 	rootcling -f $(LIB_DIR)/dictionaries.cc -c LinkDef.hh
@@ -71,6 +72,9 @@ bin/Unfolder: src/app/Unfolder.C $(SHARED_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -O3 -o $@ $<
 
 bin/BinScheme: src/app/binscheme.C $(SHARED_LIB)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -O3 -o $@ $<
+
+bin/StandaloneUnfold: src/app/standalone_unfold.C $(SHARED_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -O3 -o $@ $<
 
 clean:

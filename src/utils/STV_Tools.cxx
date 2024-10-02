@@ -209,6 +209,7 @@ void STV_Tools::CalculateSTVs(TVector3 MuonVector, TVector3 ProtonVector, double
   fPnPerpx = ( qTVectorUnit.Cross(zUnit) ).Dot(PnVector);
   fPnPerpy = ( qVectorUnit.Cross( (qTVectorUnit.Cross(zUnit) ) ) ).Dot(PnVector);
   fThetaMuP = TMath::ACos(MuonVector.Dot(ProtonVector) / (MuonVector.Mag() * ProtonVector.Mag()) );
+  fThetaPMuNu = ( MuonLorentzVector.Vect().Cross(zUnit) ).Angle(ProtonVector);
 }
 
 // __________________________________________________________________________________________________________________________________________________
@@ -434,6 +435,7 @@ void STV_Tools::CalculateSTVs(TLorentzVector p4Muon, std::vector<TLorentzVector>
   fPnPerpx = ( qTVectorUnit.Cross(zUnit) ).Dot(PnVector);
   fPnPerpy = ( qVectorUnit.Cross( (qTVectorUnit.Cross(zUnit) ) ) ).Dot(PnVector);
   fThetaMuP = TMath::ACos(p4Muon.Vect().Dot(p4TotalHadron.Vect())/ (p4Muon.Vect().Mag() * p4TotalHadron.Vect().Mag()));
+  fThetaPMuNu = ( p4Muon.Vect().Cross(zUnit) ).Angle(p4TotalHadron.Vect());
 }
 
 #endif

@@ -45,19 +45,21 @@ enum class NtupleFileType {
   // An alternate CV MC simulation
   kAltCVMC,
 
+  kDetVarMCCVLYdown, // FIXME: a temporary solution to do LY down detVar; Run 1 has no LY down detvar; I keep run 2-5 in a alternate CV
   // Placeholder for invalid values
   kUnknown,
 };
 
 // Utility functions for manipulating NtupleFileType values
-bool ntuple_type_is_detVar( const NtupleFileType& type ) {
-  constexpr std::array< NtupleFileType, 12 > detVar_types = {
+inline bool ntuple_type_is_detVar( const NtupleFileType& type ) {
+  constexpr std::array< NtupleFileType, 13 > detVar_types = {
     NtupleFileType::kDetVarMCCV, NtupleFileType::kDetVarMCLYatten,
     NtupleFileType::kDetVarMCLYdown, NtupleFileType::kDetVarMCLYrayl,
     NtupleFileType::kDetVarMCRecomb2, NtupleFileType::kDetVarMCSCE,
     NtupleFileType::kDetVarMCWMAngleXZ, NtupleFileType::kDetVarMCWMAngleYZ,
     NtupleFileType::kDetVarMCWMdEdx, NtupleFileType::kDetVarMCWMX,
-    NtupleFileType::kDetVarMCWMYZ, NtupleFileType::kDetVarMCCVExtra
+    NtupleFileType::kDetVarMCWMYZ, NtupleFileType::kDetVarMCCVExtra,
+    NtupleFileType::kDetVarMCCVLYdown
   };
 
   const auto begin = detVar_types.cbegin();
@@ -67,19 +69,19 @@ bool ntuple_type_is_detVar( const NtupleFileType& type ) {
   return false;
 }
 
-bool ntuple_type_is_altCV( const NtupleFileType& type ) {
+inline bool ntuple_type_is_altCV( const NtupleFileType& type ) {
   if ( type == NtupleFileType::kAltCVMC ) return true;
   return false;
 }
 
-bool ntuple_type_is_mc( const NtupleFileType& type ) {
+inline bool ntuple_type_is_mc( const NtupleFileType& type ) {
   if ( type != NtupleFileType::kOnBNB && type != NtupleFileType::kExtBNB ) {
     return true;
   }
   return false;
 }
 
-bool ntuple_type_is_reweightable_mc( const NtupleFileType& type ) {
+inline bool ntuple_type_is_reweightable_mc( const NtupleFileType& type ) {
 
   if ( type == NtupleFileType::kNumuMC
     || type == NtupleFileType::kIntrinsicNueMC
@@ -300,6 +302,7 @@ class FilePropertiesManager {
       { "detVarWMX", NtupleFileType::kDetVarMCWMX },
       { "detVarWMYZ", NtupleFileType::kDetVarMCWMYZ },
       { "detVarCVExtra", NtupleFileType::kDetVarMCCVExtra },
+      { "detVarCVLYdown", NtupleFileType::kDetVarMCCVLYdown },
       { "altCVMC", NtupleFileType::kAltCVMC },
     };
 
