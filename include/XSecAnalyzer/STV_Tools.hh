@@ -39,13 +39,16 @@ private:
   double fPnPerp;
   double fPnPerpx;
   double fPnPerpy;				
-  double fPnPar;												
+  double fPnPar;
+  double fThetaMuP;
+  double fThetaPMuNu;
   
 public:
   
   // Default constructor
   STV_Tools() {};
   void CalculateSTVs(TVector3 MuonVector,TVector3 ProtonVector, double MuonEnergy, double ProtonEnergy, STVCalcType CalcOption=kOpt1);
+  void CalculateSTVs(TLorentzVector p4Muon, std::vector<TLorentzVector> p4Hadron, STVCalcType CalcOption=kOpt1);
   
   // Default destructor
   ~STV_Tools(){}
@@ -73,6 +76,8 @@ public:
   double ReturnPnPerpx() {return fPnPerpx;}
   double ReturnPnPerpy() {return fPnPerpy;}
   double ReturnPnPar() {return fPnPar;}
+  double ReturnThetaMuHadron() {return fThetaMuP;}
+  double ReturnThetaPMuNu() {return fThetaPMuNu;}
 };
 
 #endif
