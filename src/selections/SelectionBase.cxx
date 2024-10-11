@@ -5,6 +5,7 @@
 #include "XSecAnalyzer/Functions.hh"
 #include "XSecAnalyzer/Selections/SelectionBase.hh"
 
+
 SelectionBase::SelectionBase(std::string fSelectionName_) {
   fSelectionName = fSelectionName_;
   nPassedEvents = 0;
@@ -25,17 +26,22 @@ void SelectionBase::Setup(TTree* Tree_, bool Create_) {
 }
 
 void SelectionBase::ApplySelection(AnalysisEvent* Event) {
+ 
   Reset();
-
+  std::cout<< "finished - Reset()" << std::endl;
+  
   MC_Signal = DefineSignal(Event);
+  std::cout<< "finished - DefineSignal(Event)" << std::endl;
   Selected = Selection(Event);
+  std::cout<< "finished - Selection(Event)" << std::endl;
   EvtCategory = CategorizeEvent(Event);
-
+  std::cout<< "finished - CategorizeEvent(Event)" << std::endl;
   ComputeRecoObservables(Event);
+   std::cout<< "finished - ComputeRecoObservables(Event)" << std::endl;
   if (Event->is_mc_) {   //Event->is_mc_ is set in CategorizeEvent
     ComputeTrueObservables(Event);
   }
-
+  std::cout<< "finished - ComputeTrueObservables(Event)" << std::endl;
   if (Selected) {
     nPassedEvents++;
   }
@@ -47,6 +53,7 @@ void SelectionBase::Summary() {
 }
 
 void SelectionBase::SetupTree(TTree* Tree_, bool Create_) {
+  std::cout<< "SelectionBase::SetupTree" << std::endl;
   Tree = Tree_;
   Create = Create_;
 
@@ -54,15 +61,21 @@ void SelectionBase::SetupTree(TTree* Tree_, bool Create_) {
 
   BranchName = "Selected";
   SetBranch(&Selected,BranchName,kBool);
+  std::cout<< "Set Branch::"<<BranchName << std::endl;
 
   BranchName = "MC_Signal";
   SetBranch(&MC_Signal,BranchName,kBool);
+  std::cout<< "Set Branch::"<<BranchName << std::endl;
 
   BranchName = fSelectionName+"Category";
   SetBranch(&EvtCategory,"EventCategory",kInteger);
 
+  std::cout<< "Set Branch::"<<BranchName << std::endl;
+
   DefineAdditionalInputBranches();
+  std::cout<<"Finished :: DefineAdditionalInputBranches()"<< std::endl;
   DefineOutputBranches();
+  std::cout<<"Finished :: DefineOutputBranches()"<< std::endl;
 }
 
 void SelectionBase::SetBranch(void* Variable, std::string VariableName, VarType VariableType) {
@@ -90,14 +103,28 @@ void SelectionBase::SetBranch(void* Variable, std::string VariableName, VarType 
   case kSTDVector:
     //set_object_output_branch_address< std::vector<double> >(*Tree,VariableName,Variable,Create);
     break;
+  case kVectorVectorFloat:
+    break;
+  case kVectorInteger:
+    break;
   default:
     std::cerr << "Unexpected variable type:" << VariableType << std::endl;
     throw;
   }
 
-  if (Leaflist!="") {
+  if (Leaflist!="" /*&& VariableType != kVectorInteger&& VariableType != kVectorVectorFloat*/) {
     set_output_branch_address(*Tree,VariableName,Variable,Create,Leaflist);
-  } else {
+  } 
+  /*
+  else if(Leaflist!="" && VariableType == kVectorInteger){
+    set_object_output_branch_address< std::vector<int> >(*Tree,
+    VariableName, Variable, Create );
+  }
+    else if(Leaflist!="" && VariableType == kVectorVectorFloat){
+   set_object_output_branch_address< std::vector<std::vector<float > > >(*Tree,
+    VariableName, Variable, Create);
+  }*/
+  else {
     set_output_branch_address(*Tree,VariableName,Variable,Create);
   }
 }
@@ -122,6 +149,12 @@ void SelectionBase::SaveVariablePointer(void* Variable, VarType VariableType) {
   case kSTDVector:
     Pointer_STDVector.push_back((std::vector<double>*)Variable);
     break;
+  case kVectorVectorFloat:
+    Pointer_VectorVectorFloat.push_back((std::vector<std::vector<float>>*)Variable);
+    break;
+  case kVectorInteger:
+     Pointer_VectorInteger.push_back((std::vector<int>*)Variable);
+     break;
   default:
     std::cerr << "Unexpected variable type:" << VariableType << std::endl;
     throw;
@@ -152,4 +185,15 @@ void SelectionBase::Reset() {
   for (size_t i=0;i<Pointer_STDVector.size();i++) {
     (*(Pointer_STDVector[i])).clear();
   }
+  
+   for (size_t i=0;i<Pointer_VectorVectorFloat.size();i++) {
+   (*(Pointer_VectorVectorFloat[i])).clear();
+   }
+    for (size_t i=0;i<Pointer_VectorInteger.size();i++) {
+    (*(Pointer_VectorInteger[i])).clear();
+  }
+  
+  
+  
+  
 }
