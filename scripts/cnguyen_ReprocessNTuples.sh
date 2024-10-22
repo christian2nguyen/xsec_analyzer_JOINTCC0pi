@@ -16,7 +16,7 @@ version=current
 config_dir=${XSEC_ANALYZER_DIR}/configs
 input_file=${config_dir}/files_to_process_cthorpe.txt
 output_config=file_properties_cthorpe
-output_dir=../Output
+output_dir=/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_10_11_2024/ 
 filter_runnumbers=1,2,3,4,5
 filter_samples="numuMC,nueMC,dirtMC,extBNB,onBNB,openBNB,detVarCV,detVarLYdown,detVarLYrayl,detVarLYatten,detVarSCE,detVarRecomb2,detVarWMX,detVarWMYZ,detVarWMAngleXZ,detVarWMAngleYZ,detVarCVExtra,altCVMC"
 # Parse command-line arguments

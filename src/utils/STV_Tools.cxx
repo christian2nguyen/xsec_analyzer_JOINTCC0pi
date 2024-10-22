@@ -2,15 +2,13 @@
 
 // _________________________________________________________________________________________________________________________________________________
 
-#ifndef STV_TOOLS_CXX
-#define STV_TOOLS_CXX
-
 #include "XSecAnalyzer/STV_Tools.hh"
 
 // __________________________________________________________________________________________________________________________________________________
 
-void STV_Tools::CalculateSTVs(TVector3 MuonVector, TVector3 ProtonVector, double MuonEnergy, double ProtonEnergy, STVCalcType CalcOpt) {
-
+void STV_Tools::CalculateSTVs( TVector3 MuonVector, TVector3 ProtonVector,
+  double MuonEnergy, double ProtonEnergy, STVCalcType CalcOpt )
+{
   double BindingEnergy_GeV;
 
   switch (CalcOpt) {
@@ -437,5 +435,3 @@ void STV_Tools::CalculateSTVs(TLorentzVector p4Muon, std::vector<TLorentzVector>
   fThetaMuP = TMath::ACos(p4Muon.Vect().Dot(p4TotalHadron.Vect())/ (p4Muon.Vect().Mag() * p4TotalHadron.Vect().Mag()));
   fThetaPMuNu = ( p4Muon.Vect().Cross(zUnit) ).Angle(p4TotalHadron.Vect());
 }
-
-#endif

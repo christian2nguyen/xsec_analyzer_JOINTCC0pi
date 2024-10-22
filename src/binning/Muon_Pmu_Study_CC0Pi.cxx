@@ -11,10 +11,10 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   ntuple_ttree_name_ = "stv_tree";
 
   // Run numbers to use when plotting migration matrices
-  runs_to_use_ = { 1 };
+  runs_to_use_ = { 1,2,3 };
 
   // Prefix for the output bin and slice configuration text files
-  out_config_prefix_ = "Muon_Pmu_Study_v2_";
+  out_config_prefix_ = "Muon_1D_Pmu_v3_";
 
   // Selection to use with this binning scheme
   selection_name_ = "JOINTCC0pi";
@@ -157,7 +157,7 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
   */
  
   
-  
+  /*
   std::map< double, std::vector<double> > multiply_Pmu  = {
   {-0.5, Pmu_2d}, 
   {0.5, Pmu_2d},
@@ -194,8 +194,8 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
  
  //vect_sideband.emplace_back(b2d_Mulitply_trklen_reco);
  
- vect_block.emplace_back(b2d_Mulitply_trklen_reco,b2d_Mulitply_trklen_reco);
-
+   vect_block.emplace_back(b2d_Mulitply_trklen_reco,b2d_Mulitply_trklen_reco);
+*/
 
 /*
     branchexpr_reco_scheme1 = "trk_len_v[ muon_candidate_idx ];cm;p3_mu.Mag();";

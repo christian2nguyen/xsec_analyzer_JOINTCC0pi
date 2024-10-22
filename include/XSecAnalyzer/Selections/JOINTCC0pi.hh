@@ -1,5 +1,5 @@
-#ifndef __JOINTCC0pi_h__
-#define __JOINTCC0pi_h__
+
+#pragma once
 
 
 #include "XSecAnalyzer/Selections/SelectionBase.hh"
@@ -13,12 +13,16 @@ class JOINTCC0pi : public SelectionBase {
  public:
   /////Constructor
   JOINTCC0pi();
-  
-  ///destructor 
+
+
+  ///destructor
+
    ~JOINTCC0pi() {
         XGBoosterFree(*booster);
         std::cout << "Destructor: Memory deallocated." << std::endl;
     }
+
+/*
     
   /////////////
   //BDT Model// 
@@ -49,11 +53,46 @@ class JOINTCC0pi : public SelectionBase {
   bool mc_vertex_inside_FV(AnalysisEvent* Event);
   float reco_distance_to_FV_Surface(AnalysisEvent* Event);
   float mc_distance_to_FV_Surface(AnalysisEvent* Event);
+*/
+
+  /////////////
+  //BDT Model//
+  BoosterHandle* booster;
+
+  virtual int categorize_event( AnalysisEvent* event ) override final;
+  virtual bool selection( AnalysisEvent* event ) override final;
+  virtual bool define_signal( AnalysisEvent* event ) override final;
+  virtual void compute_reco_observables( AnalysisEvent* event ) override final;
+  virtual void compute_true_observables( AnalysisEvent* event ) override final;
+  virtual void define_output_branches() override final;
+  virtual void define_constants() override final;
+  virtual void define_category_map() override final;
+  virtual void reset() override final;
+  virtual void define_additional_input_branches(TTree& etree) override final;
+
+  void apply_numu_CC_selection( AnalysisEvent* event );
+  void find_muon_candidate( AnalysisEvent* event );
+  void find_lead_p_candidate( AnalysisEvent* event );
+  void classify_tracks( AnalysisEvent* event );
+  bool in_proton_containment_vol( float x, float y, float z );
+  float distanceBetweentwopoint(float x1, float y1,
+                                float z1, float x2,
+                                float y2, float z2);
+  void compute_stvs( const TVector3& p3mu,
+                    const TVector3& p3p, float& delta_pT,
+                     float& delta_phiT, float& delta_alphaT,
+                     float& delta_pL, float& pn,
+                     float& delta_pTx, float& delta_pTy );
+  bool reco_vertex_inside_FV( AnalysisEvent* event );
+  bool mc_vertex_inside_FV( AnalysisEvent* event );
+  float reco_distance_to_FV_Surface( AnalysisEvent* event );
+  float mc_distance_to_FV_Surface( AnalysisEvent* event );
+
  float point_distance_to_FV( float x, float y, float z );
  void SetVerbosal(int input ){verbosal = input;}
   //////////////////////////////////////////////////////
   // Print Error Messages > 0
-  int verbosal = 1;
+  int verbosal = 0;
   ///////////////////////////////////////////////////////
   // cc0pi Cut Values 
   //////////////////////////////////////////////////////
@@ -73,21 +112,15 @@ class JOINTCC0pi : public SelectionBase {
 //constexpr float MUON_LENGTH_CUT = 10.; // cm
 //constexpr float MUON_PID_CUT .2;
 
- 
+////////////////////////////////////////////////////////////
+///// Extra Input Branches that I need for my anylzer
+////////////////////////////////////////////////////////////
+//float track_chi2_muon_;
   
-  float nu_vx_;
-  float nu_vy_;
-  float nu_vz_;
   
-  int num_pf_particles_ ;
-  float track_chi2_muon_; 
-  
-
-  
-
 
 ////////////////////////////////////////////////////////////
-///// Only need to declear varibles that are exclusive to the Joint CC0pi 
+///// Only need to declear varibles that are exclusive to the Joint CC0pi
 ////////////////////////////////////////////////////////////
 
 
@@ -265,8 +298,8 @@ class JOINTCC0pi : public SelectionBase {
     float mc_muontrklen_;
 
   STVCalcType CalcType;
-  
+
+
   private:
 };
 
-#endif

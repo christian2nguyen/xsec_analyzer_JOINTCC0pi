@@ -12,7 +12,6 @@ void SetBranchAddress(TTree& etree, std::string BranchName, void* Variable) {
 // from the Event TTree
 void set_event_branch_addresses(TTree& etree, AnalysisEvent& ev)
 {
-
   // Reco PDG code of primary PFParticle in slice (i.e., the neutrino
   // candidate)
   SetBranchAddress(etree, "slpdg", &ev.nu_pdg_ );
@@ -135,6 +134,17 @@ void set_event_branch_addresses(TTree& etree, AnalysisEvent& ev)
   else {
     ev.track_chi2_proton_.reset( nullptr );
   }
+  //////////////// Same for muon 
+    bool has_chipr_muon = ( etree.GetBranch("trk_pid_chimu_v") != nullptr );
+  if ( has_chipr_muon ) {
+    set_object_input_branch_address( etree, "trk_pid_chimu_v",
+      ev.track_chi2_muon_ );
+  }
+  else {
+    ev.track_chi2_muon_.reset( nullptr );
+  }
+  
+  
 
  set_object_input_branch_address( etree, "trk_bragg_mu_fwd_preferred_v",
       ev.trk_bragg_mu_fwd_preferred_v_ );
@@ -468,23 +478,23 @@ void set_event_output_branch_addresses(TTree& out_tree, AnalysisEvent& ev,
   }
     
     
-set_object_output_branch_address< std::vector<float> >( out_tree,
-  "trk_pid_chipi_v", ev.track_chi2_pion_, create );
-
-set_object_output_branch_address< std::vector<float> >( out_tree,
-  "trk_pid_chika_v", ev.track_chi2_kaon_, create );
-    
-set_object_output_branch_address< std::vector<float> >( out_tree,
-  "trk_bragg_mu_v", ev.trk_bragg_mu_v_, create );
+ set_object_output_branch_address< std::vector<float> >( out_tree,
+   "trk_pid_chipi_v", ev.track_chi2_pion_, create );
+ 
+ set_object_output_branch_address< std::vector<float> >( out_tree,
+   "trk_pid_chika_v", ev.track_chi2_kaon_, create );
+     
+ set_object_output_branch_address< std::vector<float> >( out_tree,
+   "trk_bragg_mu_v", ev.trk_bragg_mu_v_, create );
 
  //set_object_output_branch_address< std::vector<float> >( out_tree,
  //       "trk_bragg_pion_v", ev.trk_bragg_pion_v_, create );
 
-set_object_output_branch_address< std::vector<float> >( out_tree,
-      "trk_bragg_p_v", ev.trk_bragg_p_v_, create );
-
-set_object_output_branch_address< std::vector<float> >( out_tree,
-      "trk_bragg_mip_v", ev.trk_bragg_mip_v_, create );  
+ set_object_output_branch_address< std::vector<float> >( out_tree,
+       "trk_bragg_p_v", ev.trk_bragg_p_v_, create );
+ 
+ set_object_output_branch_address< std::vector<float> >( out_tree,
+       "trk_bragg_mip_v", ev.trk_bragg_mip_v_, create );  
   
     
     
