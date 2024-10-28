@@ -214,19 +214,40 @@ void MakeConfig::Print(){
   // Counting the total bins of sideband from many blocks
   std::vector<double> sideband_edges;
   for(int i = 0; i < vect_sideband->size(); i++){
-	  std::vector<double> source = vect_sideband->at(i).block_reco_->GetVector();
-	  std::copy(source.begin(), source.end(), std::back_inserter(sideband_edges));
+    std::vector<double> source = vect_sideband->at(i).block_reco_->GetVector();
+    std::copy(source.begin(), source.end(), std::back_inserter(sideband_edges));
   }
 
-  	auto& bin_sideband_slice = add_slice( sb, sideband_edges, bin_number_var_idx+1 );
-	int sideband_bin_index = 0;
+  // 	auto& bin_sideband_slice = add_slice( sb, sideband_edges, bin_number_var_idx+1 );
+  //	int sideband_bin_index = 0;
   for(int i = 0; i < vect_sideband->size(); i++){
-	  for(int j = 0; j < vect_sideband->at(i).block_reco_->GetNBinsX(); j++){
-		  bin_sideband_slice.bin_map_[ ++sideband_bin_index ].insert( reco_bins.size() );
+    if(vect_sideband->at(i).block_reco_->Is1D()){
+      auto& bin_sideband_slice = add_slice( sb, vect_sideband->at(i).block_reco_->GetVector(), bin_number_var_idx++ );
+      int sideband_bin_index = 0;
+      for(int j = 0; j < vect_sideband->at(i).block_reco_->GetNBinsX(); j++){
+        bin_sideband_slice.bin_map_[ ++sideband_bin_index ].insert( reco_bins.size() );
         reco_bins.emplace_back( vect_sideband->at(i).block_reco_->GetBinDef(j),
-          RecoBinType(vect_sideband->at(i).block_reco_->GetBinType()), -1 );
-	  }
+            RecoBinType(vect_sideband->at(i).block_reco_->GetBinType()), -1 );
+      }
+    }
+    else{
+
+      int xvar_idx = bin_number_var_idx++;
+      int yvar_idx = bin_number_var_idx++;
+      for( int j = 0; j < vect_sideband->at(i).block_reco_->GetNBinsX(); j++ ){
+        double xlow = vect_sideband->at(i).block_reco_->GetBinXLow(j);
+        double xhigh = vect_sideband->at(i).block_reco_->GetBinXHigh(j);
+        auto& slice = add_slice( sb, vect_sideband->at(i).block_reco_->GetVector(j),
+            xvar_idx, yvar_idx, xlow, xhigh );
+        for( int k = 0; k < vect_sideband->at(i).block_reco_->GetNBinsY(j); k++ ){
+          slice.bin_map_[ k + 1 ].insert( reco_bins.size() );
+          reco_bins.emplace_back(vect_sideband->at(i).block_reco_->GetBinDef(j, k),
+              RecoBinType(vect_sideband->at(i).block_reco_->GetBinType()), i );
+        }
+      }
+    }
   }
+
 
 
   std::cout << DIRECTORY << '\n';
@@ -263,7 +284,7 @@ void MakeConfig::Print(){
   std::cout << "Save universes bin configuration into => "
     << bin_config_output << '\n';
   std::cout << "Save slice configuration into         => "
-   << slice_config_output << '\n';
+    << slice_config_output << '\n';
 }
 
 void MakeConfig::make_res_plots( const std::string& branchexpr,
@@ -528,8 +549,8 @@ void MakeConfig::make_res_plots( const std::string& branchexpr,
 }
 
 void MakeConfig::make_res_plots( std::istream& in_stream,
-  const std::set<int>& runs, const std::string& universe_branch_name,
-  size_t universe_index, bool show_smear_numbers )
+    const std::set<int>& runs, const std::string& universe_branch_name,
+    size_t universe_index, bool show_smear_numbers )
 {
   const std::string variable_title = "bin";
 
@@ -978,8 +999,8 @@ void Block2D::SetTitle( const std::string& title ) {
     str_container.clear();
   }
   else throw std::runtime_error( "Wrong title -> " + fTitle
-    + ". The format of the title of 2D block must be <branch title>;"
-    + " <unit>; <y branch title>; <y unit>." );
+      + ". The format of the title of 2D block must be <branch title>;"
+      + " <unit>; <y branch title>; <y unit>." );
 }
 
 
@@ -1017,8 +1038,8 @@ void Block2D::SetTexTitle( const std::string& textitle ) {
     str_container.clear();
   }
   else throw std::runtime_error( "Wrong title -> " + fTexTitle
-    + ". The format of the title of 2D block must be <branch title>;"
-    + " <unit>; <y branch title>; <y unit>." );
+      + ". The format of the title of 2D block must be <branch title>;"
+      + " <unit>; <y branch title>; <y unit>." );
 }
 
 void MakeConfig::BinScheme() {
