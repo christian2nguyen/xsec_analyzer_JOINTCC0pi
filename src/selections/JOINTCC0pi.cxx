@@ -21,6 +21,7 @@ JOINTCC0pi::JOINTCC0pi() : SelectionBase("JOINTCC0pi") {
   std::cout<<"Finished with Constuctor  "<<std::endl;
 
   xgb_pid_vec_.reset( new std::vector<int>() );
+  this->define_category_map();
 
 }
 ////////////////////////////////////////////////////////////////
