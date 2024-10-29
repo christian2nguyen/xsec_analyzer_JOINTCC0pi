@@ -421,6 +421,8 @@ bool JOINTCC0pi::define_signal(AnalysisEvent* event){
   
   mc_neutrino_is_numu_ = ( event->mc_nu_pdg_ == MUON_NEUTRINO );
 
+  mc_neutrino_is_numu_ = ( event->mc_nu_pdg_ == MUON_NEUTRINO );
+
   double lead_p_mom = LOW_FLOAT;
 
   for ( size_t p = 0u; p < event->mc_nu_daughter_pdg_->size(); ++p ) {
@@ -482,9 +484,12 @@ bool JOINTCC0pi::define_signal(AnalysisEvent* event){
     && mc_muon_in_mom_range_ && mc_no_fs_pi0_
     && mc_no_charged_pi_above_threshold_;
 
+
   mc_is_cc0pi_wc_signal_ = mc_vertex_in_FV_ && mc_neutrino_is_numu_
     && mc_muon_in_wc_mom_range_ && mc_no_fs_pi0_
     && mc_no_charged_pi_above_wc_threshold_;
+
+  //std::cout << "DEBUG : " << __FILE__ << "  "  << __LINE__ << "  " << mc_is_cc0pi_signal_ << std::endl;
 
   return mc_is_cc0pi_signal_;
 }
