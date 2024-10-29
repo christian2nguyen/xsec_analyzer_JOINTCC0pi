@@ -19,8 +19,8 @@ JOINTCC0pi::JOINTCC0pi() : SelectionBase("JOINTCC0pi") {
   assert(XGBoosterLoadModel(*booster, "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/lib/cc0pi_fstrack_pid_softprob.json") == 0);
   std::cout<<"Got XGBoosterCreate  "<<std::endl;
   std::cout<<"Finished with Constuctor  "<<std::endl;
-
   xgb_pid_vec_.reset( new std::vector<int>() );
+  this->define_category_map();
 
 }
 ////////////////////////////////////////////////////////////////
@@ -364,8 +364,6 @@ int JOINTCC0pi::categorize_event(AnalysisEvent* event){
     || abs_mc_nu_pdg == MUON_NEUTRINO || abs_mc_nu_pdg == TAU_NEUTRINO );
   if ( !event->is_mc_ ) return kUnknown;
 
-  mc_neutrino_is_numu_ = ( event->mc_nu_pdg_ == MUON_NEUTRINO );
-
   if ( !mc_vertex_in_FV_ ) {
     mc_is_signal_ = false;
     mc_is_cc0pi_signal_ = false;
@@ -420,6 +418,8 @@ bool JOINTCC0pi::define_signal(AnalysisEvent* event){
   mc_no_charged_pi_above_wc_threshold_ = true;
   mc_no_fs_mesons_ = true;
   mc_vertex_in_FV_ = this->mc_vertex_inside_FV(event);
+  
+  mc_neutrino_is_numu_ = ( event->mc_nu_pdg_ == MUON_NEUTRINO );
 
   double lead_p_mom = LOW_FLOAT;
 
@@ -853,10 +853,6 @@ void JOINTCC0pi::define_output_branches(){
   // Cosmic rejection parameters for numu CC inclusive selection
 
  // MC truth information for the neutrino
-
-
-
-
 
 
 

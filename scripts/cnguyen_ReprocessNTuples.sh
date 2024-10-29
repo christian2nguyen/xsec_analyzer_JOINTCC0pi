@@ -14,10 +14,10 @@ usage() {
 
 version=current
 config_dir=${XSEC_ANALYZER_DIR}/configs
-input_file=${config_dir}/files_to_process_cthorpe.txt
-output_config=file_properties_cthorpe
+input_file=${config_dir}/files_to_process_missing.txt
+output_config=file_properties_missing
 output_dir=/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_10_11_2024/ 
-filter_runnumbers=1,2,3,4,5
+filter_runnumbers=1,2,3
 filter_samples="numuMC,nueMC,dirtMC,extBNB,onBNB,openBNB,detVarCV,detVarLYdown,detVarLYrayl,detVarLYatten,detVarSCE,detVarRecomb2,detVarWMX,detVarWMYZ,detVarWMAngleXZ,detVarWMAngleYZ,detVarCVExtra,altCVMC"
 # Parse command-line arguments
 while getopts ":o:r:s:v:" opt; do

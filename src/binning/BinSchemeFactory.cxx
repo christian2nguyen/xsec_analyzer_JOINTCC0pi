@@ -1,9 +1,10 @@
 // XSecAnalyzer includes
 #include "XSecAnalyzer/Binning/BinSchemeFactory.hh"
 #include "XSecAnalyzer/Binning/TutorialBinScheme.hh"
-#include "XSecAnalyzer/Binning/CCXp0piBinScheme.hh"
 #include "XSecAnalyzer/Binning/JOINTCC0Pi_BinScheme.hh"
+#include "XSecAnalyzer/Binning/CCXp0piBinScheme.hh"
 #include "XSecAnalyzer/Binning/Muon_Pmu_Study_CC0Pi.hh"
+
 BinSchemeFactory::BinSchemeFactory() {
 }
 

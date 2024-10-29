@@ -19,5 +19,4 @@ if [ ! -f "$BIN_CONFIG" ]; then
   echo "BIN_CONFIG \"${BIN_CONFIG}\" not found"
   exit 1
 fi
-
 univmake ${FPM_CONFIG} ${BIN_CONFIG} ${OUTPUT_ROOT_FILE} ${FPM_CONFIG}
