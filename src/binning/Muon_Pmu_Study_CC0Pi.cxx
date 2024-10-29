@@ -97,7 +97,41 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   //vect_sideband.emplace_back(b1r_sideband_trklengh);
   vect_block.emplace_back(b1r_sideband_trklengh,b1r_sideband_trklengh);
 
+
+  branchexpr_sideband = "costheta; ; trklenght; ";
+  title = "costheta; ; trklenght;";
+  textitle = "costheta; ; trklenght;";
+  std::vector<double> trk_len_v_edges = {0, 10, 20, 30, 40, 50, 60, 80, 100 ,120, 140, 160, 180, 200, 250, 300, 350};
+    std::map< double, std::vector<double> > MUON_2D_BIN_EDGES_inclusive_trklenght = {
+// the 2D binning of inclusive but took the max limit of 2 GeV and not 2.5 GeV which its given
+{ -1.00,
+    {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350} },
+{ -0.50,
+    {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350}},
+{ 0.00,
+    { 0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350 }},
+ { 0.27,
+     trk_len_v_edges },
+ { 0.45,
+     trk_len_v_edges },
+ { 0.62,
+     trk_len_v_edges },
+ { 0.76,
+     trk_len_v_edges },
+ { 0.86,
+     trk_len_v_edges },
+ { 0.94,
+     trk_len_v_edges },
+ { 1.0, {} }
+};
+
+  Block2D *b2r_sideband = new Block2D(branchexpr_sideband, title, textitle, MUON_2D_BIN_EDGES_inclusive_trklenght , CCNPI_SIDEBAND_SELECTION, kSidebandRecoBin);
+  vect_sideband.emplace_back(b2r_sideband);
+
+
 /*
+  std::vector<double> trk_len_v_edges = {0, 10, 20, 30, 40, 50, 60, 80, 100 ,120, 140, 160, 180, 200, 250, 300, 350};
+
   std::map< double, std::vector<double> > MUON_2D_BIN_EDGES_inclusive_trklenght = {
 // the 2D binning of inclusive but took the max limit of 2 GeV and not 2.5 GeV which its given  
 { -1.00, 
