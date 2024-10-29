@@ -242,7 +242,7 @@ void MakeConfig::Print(){
         for( int k = 0; k < vect_sideband->at(i).block_reco_->GetNBinsY(j); k++ ){
           slice.bin_map_[ k + 1 ].insert( reco_bins.size() );
           reco_bins.emplace_back(vect_sideband->at(i).block_reco_->GetBinDef(j, k),
-              RecoBinType(vect_sideband->at(i).block_reco_->GetBinType()), i );
+              RecoBinType(vect_sideband->at(i).block_reco_->GetBinType()), -1 );
         }
       }
     }
