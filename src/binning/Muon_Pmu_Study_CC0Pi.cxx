@@ -14,7 +14,7 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   runs_to_use_ = { 1,2,3 };
 
   // Prefix for the output bin and slice configuration text files
-  out_config_prefix_ = "Muon_1D_Pmu_v3_";
+  out_config_prefix_ = "Muon_TrackSlices_mcs_study_";
 
   // Selection to use with this binning scheme
   selection_name_ = "JOINTCC0pi";
@@ -44,7 +44,7 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   // the tex title "tex title; units" is used in latex format
   textitle = "P_{\\mu};GeV/c";
   Block1D *b1dt_Pmu_true = new Block1D(branchexpr, title, textitle, Pmu_2d, selection_true, kSignalTrueBin);
-  branchexpr = "p3_mu.Mag();GeV/c";
+  branchexpr = " p3_mu_mcs.Mag();GeV/c";
   // only the name of branch and the selection is different from true.
   Block1D *b1dt_Pmu_reco = new Block1D(branchexpr, title, textitle, Pmu_2d, selection_reco, kOrdinaryRecoBin);
   vect_block.emplace_back(b1dt_Pmu_true,b1dt_Pmu_reco);
@@ -54,7 +54,7 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   // the tex title "tex title; units" is used in latex format
   textitle = "\\cos\\theta;";
   Block1D *b1dt_cos_true = new Block1D(branchexpr, title, textitle, costheta, selection_true, kSignalTrueBin);
- branchexpr = "p3_mu.CosTheta();";
+ branchexpr = " p3_mu_mcs.CosTheta();";
   // only the name of branch and the selection is different from true.
   Block1D *b1dt_cos_reco = new Block1D(branchexpr, title, textitle, costheta, selection_reco, kOrdinaryRecoBin);
   vect_block.emplace_back(b1dt_cos_true,b1dt_cos_reco);
@@ -93,15 +93,15 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   textitle = "TrkLength_{\\mu};cm";
 
 
-  Block1D *b1r_sideband_trklengh = new Block1D(branchexpr_sideband, title, textitle, trk_len_v_edges, selection_reco, kOrdinaryRecoBin);
+  Block1D *b1r_sideband_trklengh = new Block1D(branchexpr_sideband, title, textitle, trk_len_v_edges, selection_reco, kSidebandRecoBin);
   //vect_sideband.emplace_back(b1r_sideband_trklengh);
-  vect_block.emplace_back(b1r_sideband_trklengh,b1r_sideband_trklengh);
+  //vect_block.emplace_back(b1r_sideband_trklengh,b1r_sideband_trklengh);
 
-
-  branchexpr_sideband = "costheta; ; trklenght; ";
-  title = "costheta; ; trklenght;";
-  textitle = "costheta; ; trklenght;";
-  std::vector<double> trk_len_v_edges = {0, 10, 20, 30, 40, 50, 60, 80, 100 ,120, 140, 160, 180, 200, 250, 300, 350};
+  vect_sideband.emplace_back(b1r_sideband_trklengh);
+  branchexpr_sideband = "p3_mu_mcs.CosTheta();;trk_len_v[ muon_candidate_idx ];cm";
+  title = "cos#theta; ; trklenght;";
+  textitle = "cos#theta; ; trklenght;";
+  
     std::map< double, std::vector<double> > MUON_2D_BIN_EDGES_inclusive_trklenght = {
 // the 2D binning of inclusive but took the max limit of 2 GeV and not 2.5 GeV which its given
 { -1.00,
@@ -125,7 +125,7 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
  { 1.0, {} }
 };
 
-  Block2D *b2r_sideband = new Block2D(branchexpr_sideband, title, textitle, MUON_2D_BIN_EDGES_inclusive_trklenght , CCNPI_SIDEBAND_SELECTION, kSidebandRecoBin);
+  Block2D *b2r_sideband = new Block2D(branchexpr_sideband, title, textitle, MUON_2D_BIN_EDGES_inclusive_trklenght , selection_reco, kSidebandRecoBin);
   vect_sideband.emplace_back(b2r_sideband);
 
 
@@ -166,8 +166,8 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
 vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
  //vect_block.emplace_back(b2d_TrackLength_reco_inclusive,b2d_TrackLength_reco_inclusive);
 */
-/*
-    branchexpr_reco_scheme1 = "p3_mu.Mag();GeV/c;trk_len_v[ muon_candidate_idx ];cm";
+
+    branchexpr_reco_scheme1 = "p3_mu_mcs.Mag();GeV/c;trk_len_v[ muon_candidate_idx ];cm";
     std::map< double, std::vector<double> > MUON_2D_BIN_EDGES_trackLength = {
     { 0.1, {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350} },
     { 0.24, {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350} },
@@ -187,11 +187,11 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
       MUON_2D_BIN_EDGES_trackLength, selection_reco, kSidebandRecoBin);
     //vect_sideband.emplace_back(b2d_TrackLength_reco);
 
-  vect_block.emplace_back(b2d_TrackLength_reco,b2d_TrackLength_reco);
-  */
+    vect_sideband.emplace_back(b2d_TrackLength_reco);
+  
  
   
-  /*
+  
   std::map< double, std::vector<double> > multiply_Pmu  = {
   {-0.5, Pmu_2d}, 
   {0.5, Pmu_2d},
@@ -201,14 +201,15 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
   }; 
   
   
-     branchexpr_reco_scheme1 = "sel_num_proton_candidates;;p3_mu.Mag();GeV/c";
+     branchexpr_reco_scheme1 = "sel_num_proton_candidates;;p3_mu_mcs.Mag();GeV/c";
       Block2D *b2d_Mulitply_pmu_reco = new Block2D(branchexpr_reco_scheme1,
       "Nprotons;;P_{#mu};GeV/c", 
       "Nprotons;;P_{#mu};GeV/c",
-      multiply_Pmu, selection_reco, kOrdinaryRecoBin);
+      multiply_Pmu, selection_reco, kSidebandRecoBin);
 
-     vect_block.emplace_back(b2d_Mulitply_pmu_reco,b2d_Mulitply_pmu_reco);
+      vect_sideband.emplace_back(b2d_Mulitply_pmu_reco);
 
+     
     //vect_sideband.emplace_back(b2d_Mulitply_pmu_reco);
 
     std::map< double, std::vector<double> > multiply_trklen = {
@@ -224,12 +225,12 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
         Block2D *b2d_Mulitply_trklen_reco = new Block2D(branchexpr_reco_scheme1,
       "Nprotons;;trkLen;cm", 
       "Nprotons;;trkLen;cm",
-      multiply_trklen, selection_reco, kOrdinaryRecoBin);
+      multiply_trklen, selection_reco, kSidebandRecoBin);
  
- //vect_sideband.emplace_back(b2d_Mulitply_trklen_reco);
+     vect_sideband.emplace_back(b2d_Mulitply_trklen_reco);
  
-   vect_block.emplace_back(b2d_Mulitply_trklen_reco,b2d_Mulitply_trklen_reco);
-*/
+
+
 
 /*
     branchexpr_reco_scheme1 = "trk_len_v[ muon_candidate_idx ];cm;p3_mu.Mag();";
