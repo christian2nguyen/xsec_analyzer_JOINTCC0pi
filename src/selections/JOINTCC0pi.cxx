@@ -134,14 +134,14 @@ if(verbosal > 0) std::cout<<"inside is muon:line 107"<< std::endl;
     muon_trkend_y_ = event->track_endx_->at(muon_candidate_idx_);
     muon_trkend_z_ = event->track_endx_->at(muon_candidate_idx_);
 
- if(verbosal > 0) std::cout<<"inside is muon:line 137"<< std::endl;
+   if(verbosal > 0) std::cout<<"inside is muon:line 137"<< std::endl;
  
- if(verbosal > 0) std::cout<<"event->track_chi2_muon_->Size() = "<< event->track_chi2_muon_->size()<<std::endl;
+   if(verbosal > 0) std::cout<<"event->track_chi2_muon_->Size() = "<< event->track_chi2_muon_->size()<<std::endl;
  
  
     muon_trkchi2muon_ = event->track_chi2_muon_->at(muon_candidate_idx_);
 
-    if( verbosal > 0 ) std::cout<< "Finished getting float muon_mom  float muon_muon_range loat muon_muon_mcs   "<< std::endl;
+  if( verbosal > 0 ) std::cout<< "Finished getting float muon_mom  float muon_muon_range loat muon_muon_mcs   "<< std::endl;
 
 
 
@@ -280,12 +280,13 @@ void JOINTCC0pi::compute_true_observables(AnalysisEvent* event){
         float py = event->mc_nu_daughter_py_->at( d );
         float pz = event->mc_nu_daughter_pz_->at( d );
         *mc_p3_mu_ = TVector3( px, py, pz );
-        mc_muontrklen_ = distanceBetweentwopoint(event->mc_nu_vx_,
-        event->mc_nu_vy_,
-        event->mc_nu_vz_,
-        event->mc_nu_daughter_endx_->at( d ),
-        event->mc_nu_daughter_endy_->at( d ),
-        event->mc_nu_daughter_endz_->at( d ));
+        mc_muontrklen_ = distanceBetweentwopoint(
+                          event->mc_nu_vx_,
+                          event->mc_nu_vy_,
+                          event->mc_nu_vz_,
+                          event->mc_nu_daughter_endx_->at( d ),
+                          event->mc_nu_daughter_endy_->at( d ),
+                          event->mc_nu_daughter_endz_->at( d ));
 
         break;
       }
@@ -418,10 +419,9 @@ bool JOINTCC0pi::define_signal(AnalysisEvent* event){
   mc_no_charged_pi_above_wc_threshold_ = true;
   mc_no_fs_mesons_ = true;
   mc_vertex_in_FV_ = this->mc_vertex_inside_FV(event);
-  
   mc_neutrino_is_numu_ = ( event->mc_nu_pdg_ == MUON_NEUTRINO );
 
-  mc_neutrino_is_numu_ = ( event->mc_nu_pdg_ == MUON_NEUTRINO );
+
 
   double lead_p_mom = LOW_FLOAT;
 

@@ -19,8 +19,8 @@
 #include "TTreeFormula.h"
 
 // XSecAnalyzer includes
-#include "XSecAnalyzer/WeightHandler.hh"
-
+//#include "XSecAnalyzer/WeightHandler.hh" old
+#include "WeightHandler.hh"
 #include "Selections/SelectionBase.hh"
 #include "Selections/SelectionFactory.hh"
 

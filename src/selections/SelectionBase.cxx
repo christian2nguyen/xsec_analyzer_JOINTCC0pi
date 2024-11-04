@@ -58,7 +58,9 @@ void SelectionBase::setup_tree() {
 
   this->set_branch( &selected_, "Selected" );
   this->set_branch( &mc_signal_, "MC_Signal" );
-  this->set_branch( &event_category_, "EventCategory" );
+  
+   std::string BranchName = selection_name_ +"_EventCategory";
+   this->set_branch( &event_category_, BranchName );
 
   //this->define_additional_input_branches();
   this->define_output_branches();
