@@ -450,8 +450,10 @@ bool JOINTCC0pi::define_signal(AnalysisEvent* event){
     }
     else if ( pdg == PROTON ) {
       double mom = real_sqrt( std::pow(energy, 2) - std::pow(PROTON_MASS, 2) );
-      if ( mom > lead_p_mom ) lead_p_mom = mom;
-      mc_num_protons_++;
+      if ( mom > lead_p_mom ){
+        lead_p_mom = mom;
+        mc_num_protons_++;
+      }
     }
     else if ( pdg == NEUTRON ) {
       mc_num_neutrons_++;

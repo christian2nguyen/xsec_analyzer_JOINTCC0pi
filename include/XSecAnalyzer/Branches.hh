@@ -91,6 +91,31 @@ void set_event_branch_addresses(TTree& etree, AnalysisEvent& ev)
     ev.shower_start_distance_.reset( nullptr );
   }
 
+  // Generator truth
+  bool has_generator_truth = (etree.GetBranch("mc_generator_pdg") != nullptr);
+  if(has_generator_truth){
+    set_object_input_branch_address(etree, "mc_generator_pdg", ev.mc_generator_pdg_);
+    set_object_input_branch_address(etree, "mc_generator_mother", ev.mc_generator_mother_);
+    set_object_input_branch_address(etree, "mc_generator_rescatter", ev.mc_generator_rescatter_);
+    set_object_input_branch_address(etree, "mc_generator_trackid", ev.mc_generator_trackid_);
+    set_object_input_branch_address(etree, "mc_generator_statuscode", ev.mc_generator_statuscode_);
+    set_object_input_branch_address(etree, "mc_generator_E", ev.mc_generator_E_);
+    set_object_input_branch_address(etree, "mc_generator_px", ev.mc_generator_px_);
+    set_object_input_branch_address(etree, "mc_generator_py", ev.mc_generator_py_);
+    set_object_input_branch_address(etree, "mc_generator_pz", ev.mc_generator_pz_);
+  }
+  else{
+    ev.mc_generator_pdg_.reset(nullptr);
+    ev.mc_generator_rescatter_.reset(nullptr);
+    ev.mc_generator_mother_.reset(nullptr);
+    ev.mc_generator_trackid_.reset(nullptr);
+    ev.mc_generator_statuscode_.reset(nullptr);
+    ev.mc_generator_E_.reset(nullptr);
+    ev.mc_generator_px_.reset(nullptr);
+    ev.mc_generator_py_.reset(nullptr);
+    ev.mc_generator_pz_.reset(nullptr);
+  }
+
   // Track properties
   set_object_input_branch_address( etree, "trk_pfp_id_v", ev.track_pfp_id_ );
   set_object_input_branch_address( etree, "trk_len_v", ev.track_length_ );
@@ -240,6 +265,8 @@ void set_event_output_branch_addresses(TTree& out_tree, AnalysisEvent& ev,
   set_output_branch_address( out_tree, "tuned_cv_weight",
     &ev.tuned_cv_weight_, create, "tuned_cv_weight/F" );
 
+
+
   // If MC weights are available, prepare to store them in the output TTree
   if ( ev.mc_weights_map_ ) {
 
@@ -321,6 +348,37 @@ void set_event_output_branch_addresses(TTree& out_tree, AnalysisEvent& ev,
 
   set_output_branch_address( out_tree, "mc_interaction",
     &ev.mc_nu_interaction_type_, create, "mc_interaction/I" );
+
+
+  if( ev.mc_generator_pdg_){
+    set_object_output_branch_address< std::vector<int> >( out_tree, 
+        "mc_generator_pdg", ev.mc_generator_pdg_, create );
+
+    set_object_output_branch_address< std::vector<int> >( out_tree, 
+        "mc_generator_rescatter", ev.mc_generator_rescatter_, create );
+    set_object_output_branch_address< std::vector<int> >( out_tree, 
+        "mc_generator_mother", ev.mc_generator_mother_, create );
+    set_object_output_branch_address< std::vector<int> >( out_tree, 
+        "mc_generator_trackid", ev.mc_generator_trackid_, create );
+    set_object_output_branch_address< std::vector<int> >( out_tree, 
+        "mc_generator_statuscode", ev.mc_generator_statuscode_, create );
+    set_object_output_branch_address< std::vector<float> >( out_tree, 
+        "mc_generator_E", ev.mc_generator_E_, create );
+    set_object_output_branch_address< std::vector<float> >( out_tree, 
+        "mc_generator_px", ev.mc_generator_px_, create );
+    set_object_output_branch_address< std::vector<float> >( out_tree, 
+        "mc_generator_py", ev.mc_generator_py_, create );
+    set_object_output_branch_address< std::vector<float> >( out_tree, 
+        "mc_generator_pz", ev.mc_generator_pz_, create );
+
+
+
+
+
+
+
+
+  }
 
   // PFParticle properties
   set_object_output_branch_address< std::vector<unsigned int> >( out_tree,

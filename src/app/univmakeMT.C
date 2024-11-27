@@ -9,12 +9,25 @@
 #include "TFile.h"
 #include "TROOT.h"
 #include "TTree.h"
+#include "TROOT.h"
+#include "TFileMerger.h"
+#include "TMemFile.h"
+#include "ROOT/RConfig.hxx"
+#include "ROOT/TSeq.hxx"
+#include "ROOT/TBufferMerger.hxx"
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <queue>
 
+
+#include <thread>
 // XSecAnalyzer includes
 #include "XSecAnalyzer/FilePropertiesManager.hh"
 #include "XSecAnalyzer/MCC9SystematicsCalculator.hh"
 #include "XSecAnalyzer/UniverseMaker.hh"
 
+std::mutex m;
 // Helper function that checks whether a given ROOT file represents an ntuple
 // from a reweightable MC sample. This is done by checking for the presence of
 // a branch whose name matches the TUNE_WEIGHT_NAME string defined in
@@ -113,40 +126,63 @@ int main( int argc, char* argv[] ) {
 
   std::cout << "\nCalculating systematic universes for ntuple input file:\n";
 
-  int counter = 0;
-  for ( const auto& input_file_name : input_files ) {
-    std::cout << '\t' << counter << '/' << input_files.size() << " - "
+
+  const size_t nWorkers = input_files.size();
+
+  auto work_function = [&](int seed){
+
+    std::string input_file_name = input_files.at(seed);
+
+//  for ( const auto& input_file_name : input_files ) {
+    std::cout << '\t' << seed << '/' << input_files.size() << " - "
       << input_file_name << '\n';
 
-    UniverseMaker univ_maker( univmake_config_file_name );
+    m.lock();
+    UniverseMaker *univ_maker = new UniverseMaker( univmake_config_file_name );
 
-    univ_maker.add_input_file( input_file_name.c_str() );
+    univ_maker->add_input_file( input_file_name.c_str() );
 
     bool has_event_weights = is_reweightable_mc_ntuple( input_file_name );
 
+    m.unlock();
     if ( has_event_weights ) {
       // If the check above was successful, then run all of the histogram
       // calculations in the usual way
-      univ_maker.build_universes();
+      univ_maker->build_universes();
     }
     else {
       // Passing in the fake list of explicit branch names below instructs
       // the UniverseMaker class to ignore all event weights while
       // processing the current ntuple
-      univ_maker.build_universes( { "FAKE_BRANCH_NAME" } );
+      univ_maker->build_universes( { "FAKE_BRANCH_NAME" } );
     }
 
-    univ_maker.save_histograms( output_file_name, input_file_name );
+    m.lock();
+//    univ_maker->save_histograms( output_file_name, input_file_name );
+//
+//    
+//    // The root TDirectoryFile name is the same across all iterations of this
+//    // loop, so just set it once on the first iteration
+//    if ( !set_tdirfile_name ) {
+//      tdirfile_name = univ_maker->dir_name();
+//      set_tdirfile_name = true;
+//    }
+//
+    m.unlock();
 
-    // The root TDirectoryFile name is the same across all iterations of this
-    // loop, so just set it once on the first iteration
-    if ( !set_tdirfile_name ) {
-      tdirfile_name = univ_maker.dir_name();
-      set_tdirfile_name = true;
-    }
+  }; // loop over input files
 
-    counter += 1;
-  } // loop over input files
+
+  // Create worker threads
+  std::vector<std::thread> workers;
+
+  for (auto i : ROOT::TSeqI(nWorkers))
+    workers.emplace_back(work_function, i); // seed==0 means random seed :)
+  // Make sure workers are done
+  for (auto &&worker : workers)
+    worker.join();
+
+
 
 
   // Use a temporary MCC9SystematicsCalculator object to automatically calculate

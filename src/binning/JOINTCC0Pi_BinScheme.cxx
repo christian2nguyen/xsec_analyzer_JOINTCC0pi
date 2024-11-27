@@ -176,7 +176,7 @@ const std::string CCNPI_SIDEBAND_SELECTION =
   textitle = "p_{p}; GeV/c";
 
   Block1D *b1r_sideband_NC = new Block1D(branchexpr_sideband, title, textitle,proton_binningSideband, NC_SIDEBAND_SELECTION, kSidebandRecoBin);
-  vect_sideband.emplace_back(b1r_sideband_NC);
+//  vect_sideband.emplace_back(b1r_sideband_NC);
 
 
 
@@ -188,7 +188,7 @@ const std::string CCNPI_SIDEBAND_SELECTION =
 
 
   Block1D *b1r_sideband_Npi_pMu = new Block1D(branchexpr_sideband, title, textitle, Pmu_binningSideband, CCNPI_SIDEBAND_SELECTION, kSidebandRecoBin);
-  vect_sideband.emplace_back(b1r_sideband_Npi_pMu);
+//  vect_sideband.emplace_back(b1r_sideband_Npi_pMu);
 
 
  branchexpr_sideband = "p3_mu.CosTheta(); GeV/c";
@@ -199,7 +199,7 @@ const std::string CCNPI_SIDEBAND_SELECTION =
 
 
   Block1D *b1r_sideband_Npi_costheta = new Block1D(branchexpr_sideband, title, textitle, Costheta_sideBand, CCNPI_SIDEBAND_SELECTION, kSidebandRecoBin);
-  vect_sideband.emplace_back(b1r_sideband_Npi_costheta);
+//  vect_sideband.emplace_back(b1r_sideband_Npi_costheta);
 
   branchexpr_sideband = "costheta; ; trklenght; ";
   title = "costheta; ; trklenght;";

@@ -14,6 +14,7 @@
 #include "XSecAnalyzer/PlotUtils.hh"
 #include "XSecAnalyzer/SliceBinning.hh"
 #include "XSecAnalyzer/SliceHistogram.hh"
+#include "XSecAnalyzer/Selections/EventCategoriesCC1muXp0piFSI.hh"
 
 using NFT = NtupleFileType;
 
@@ -162,6 +163,7 @@ void tutorial_slice_plots(std::string FPM_Config, std::string SYST_Config, std::
     set_ext_histogram_style( slice_ext->hist_.get() );
 
     THStack* slice_pred_stack = new THStack( "mc+ext", "" );
+    slice_ext->hist_->Scale(1, "width");
     slice_pred_stack->Add( slice_ext->hist_.get() ); // extBNB
 
     const auto& sel_for_cat = syst.get_selection_for_categories();
@@ -171,25 +173,84 @@ void tutorial_slice_plots(std::string FPM_Config, std::string SYST_Config, std::
     // ends up on top. Note that this index is one-based to match the ROOT
     // histograms
     int cat_bin_index = cat_map.size();
-    for ( auto iter = cat_map.crbegin(); iter != cat_map.crend(); ++iter )
+    std::vector<EventCategoryCCXp0piFSI> evt_cat = {kUnknown,
+
+
+
+  kNuMuCC1p0pi_CCQE_NONFSI,  // 9
+  kNuMuCC1p0pi_CCMEC_NONFSI, // 10
+  kNuMuCC1p0pi_CCRES_NONFSI, // 11
+  kNuMuCC1p0pi_Other_NONFSI, // 12
+
+
+  kNuMuCC1p0pi_CCQE_FSI,  // 5
+  kNuMuCC1p0pi_CCMEC_FSI, // 6
+  kNuMuCC1p0pi_CCRES_FSI, // 7
+  kNuMuCC1p0pi_Other_FSI, // 8
+
+    kNuMuCC0p0pi_CCQE,
+    kNuMuCC0p0pi_CCMEC,
+    kNuMuCC0p0pi_CCRES,
+    kNuMuCC0p0pi_Other,
+
+  kNuMuCC2p0pi_CCQE, // 13
+  kNuMuCC2p0pi_CCMEC, // 14
+  kNuMuCC2p0pi_CCRES, // 15
+  kNuMuCC2p0pi_Other, // 16
+
+  // M > 2
+  kNuMuCCMp0pi_CCQE,  // 17
+  kNuMuCCMp0pi_CCMEC, // 18
+  kNuMuCCMp0pi_CCRES, // 19
+  kNuMuCCMp0pi_Other, // 20
+
+  // True numu CC event with at least one final-state pion above threshold
+  kNuMuCCNpi, // 21
+  kNuMuCCOther, // 22
+
+  // True nue CC event
+  kNuECC,  //  23
+
+  // True neutral current event for any neutrino flavor
+  kNC, //  24
+
+  // True neutrino vertex (any reaction mode and flavor combination) is outside
+  // of the fiducial volume
+  kOOFV, // 25
+
+  // Seperate numubar CC from kOther
+  //kNuMuBarCC = 13,
+  // All events that do not fall within any of the other categories (e.g.,)
+  kOther
+ 
+
+    };
+    //for ( auto iter = cat_map.crbegin(); iter != cat_map.crend(); ++iter )
+    for ( auto iter = evt_cat.rbegin(); iter != evt_cat.rend(); ++iter )
     {
-      int cat = iter->first;
-      int color = iter->second.second;
+      int cat = int(*iter);
+      int color = cat_map.at(*iter).second;
+      cat_bin_index = cat+1;
       TH1D* temp_mc_hist = category_hist->ProjectionY( "temp_mc_hist",
         cat_bin_index, cat_bin_index );
+      std::cout << cat << "  " << cat_bin_index << std::endl;
       temp_mc_hist->SetDirectory( nullptr );
 
       SliceHistogram* temp_slice_mc = SliceHistogram::make_slice_histogram(
         *temp_mc_hist, slice  );
 
       set_mc_histogram_style( cat, temp_slice_mc->hist_.get(), color );
+      temp_slice_mc->hist_->Scale(1, "width");
 
       slice_pred_stack->Add( temp_slice_mc->hist_.get() );
 
       std::string cat_col_prefix = "MC" + std::to_string( cat );
 
-      --cat_bin_index;
+    //  --cat_bin_index;
     }
+
+    slice_bnb->hist_->Scale(1, "width");
+    slice_mc_plus_ext->hist_->Scale(1, "width");
 
     TCanvas* c1 = new TCanvas;
     slice_bnb->hist_->SetLineColor( kBlack );

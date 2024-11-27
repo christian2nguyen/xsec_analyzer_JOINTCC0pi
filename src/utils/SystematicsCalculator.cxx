@@ -156,7 +156,7 @@ SystematicsCalculator::SystematicsCalculator(
 
 
 
-  if ( !total_subdir ) {
+  if ( total_subdir ) {
 
     // We couldn't find the pre-computed POT-summed universe histograms,
     // so make them "on the fly" and store them in this object
@@ -834,6 +834,7 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
           // each universe to the BNB data POT for the current run
           double run_bnb_pot = run_to_bnb_pot_map.at( run );
           double rw_scale_factor = run_bnb_pot / file_pot;
+          std::cout << run_bnb_pot << "  " << file_pot << "  " << rw_scale_factor  << std::endl;
 
           // Iterate over the reweighting universes, retrieve the
           // histograms for each, and add their POT-scaled contributions
@@ -1244,21 +1245,30 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       std::string ntuple_type_str;
       config_file >> ntuple_type_str;
 
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
+
       const auto& fpm = FilePropertiesManager::Instance();
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
       auto ntuple_type = fpm.string_to_ntuple_type( ntuple_type_str );
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
       if( ntuple_type == NFT::kDetVarMCLYdown && detvar_universes_.size() == 10) continue;
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
       // Check that it's valid. If not, then complain.
       bool is_not_detVar = !ntuple_type_is_detVar( ntuple_type );
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
       if ( is_not_detVar ) {
         throw std::runtime_error( "Invalid NtupleFileType!" );
       }
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
       // Use a bare pointer for the CV universe so that we can reassign it
       // below if needed. References can't be reassigned after they are
       // initialized.
       const auto* detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCV ).get();
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << "  " << ntuple_type_str << std::endl;
       const auto& detVar_alt_u = detvar_universes_.at( ntuple_type );
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
       // The Recomb2 and SCE variations use an alternate "extra CV" universe
       // since they were generated with smaller MC statistics.
@@ -1266,12 +1276,15 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       if ( ntuple_type == NFT::kDetVarMCSCE
         || ntuple_type == NFT::kDetVarMCRecomb2 )
       {
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
         detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVExtra ).get();
       }
       else if(ntuple_type == NFT::kDetVarMCLYdown){
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
         detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVLYdown ).get();
       }
 
+      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
       make_cov_mat( *this, temp_cov_mat, *detVar_cv_u,
         *detVar_alt_u, false, false );
     } // DV type

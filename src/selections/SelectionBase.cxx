@@ -36,7 +36,6 @@ void SelectionBase::apply_selection( AnalysisEvent* event ) {
   event_category_ = this->categorize_event( event );
 
   this->compute_reco_observables( event );
-
   // Note that event->is_mc_ is set in CategorizeEvent() above
   if ( event->is_mc_ ) {
     this->compute_true_observables( event );

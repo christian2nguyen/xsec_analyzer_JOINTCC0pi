@@ -14,7 +14,6 @@ class JOINTCC0pi : public SelectionBase {
   /////Constructor
   JOINTCC0pi();
 
-
   ///destructor
 
    ~JOINTCC0pi() {
