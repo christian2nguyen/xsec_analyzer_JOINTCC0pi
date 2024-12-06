@@ -12,6 +12,7 @@ UnfoldedMeasurement Unfolder::unfold(
   auto meas = syst_calc.get_measured_events();
   const auto& data_signal = meas.reco_signal_;
   const auto& data_covmat = meas.cov_matrix_;
+  data_covmat->Print();
 
   // Check the signal true bin definitions for the presence of multiple
   // block indices. Store all distinct values in a std::set. We will
@@ -202,6 +203,10 @@ UnfoldedMeasurement Unfolder::blockwise_unfold( const TMatrixD& data_signal,
     }
 
     // Unfold the measurement for the current block
+    block_data_signal.Print();
+    block_data_covmat.Print();
+    block_smearcept.Print();
+    block_prior_true_signal.Print();
     auto block_result = this->unfold( block_data_signal, block_data_covmat,
       block_smearcept, block_prior_true_signal );
 

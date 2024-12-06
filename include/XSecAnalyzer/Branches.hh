@@ -555,6 +555,8 @@ void set_event_output_branch_addresses(TTree& out_tree, AnalysisEvent& ev,
        "trk_bragg_mip_v", ev.trk_bragg_mip_v_, create );  
   
     
+ set_object_output_branch_address< std::vector<bool> >( out_tree,
+       "trk_bragg_mu_fwd_preferred_v", ev.trk_bragg_mu_fwd_preferred_v_, create );  
     
     
 }

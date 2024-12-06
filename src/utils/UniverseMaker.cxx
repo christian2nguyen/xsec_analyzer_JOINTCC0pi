@@ -139,7 +139,7 @@ void UniverseMaker::prepare_formulas() {
     std::string category_cuts = sel_for_categories_->name()
       + "_EventCategory == " + str_category;
 
-    std::cout << category_cuts << std::endl;
+    // std::cout << category_cuts << std::endl;
 
     auto cbf = std::make_unique< TTreeFormula >(
       category_formula_name.c_str(), category_cuts.c_str(), &input_chain_ );

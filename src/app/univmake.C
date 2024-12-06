@@ -159,6 +159,7 @@ int main( int argc, char* argv[] ) {
 
   // std::cout << "\nCalculating total event counts using all input files:\n";
   // MCC9SystematicsCalculator unfolder( output_file_name, "", tdirfile_name );
+  std::cout << "Completing the creation of the universe!" << std::endl;
 
   return 0;
 }

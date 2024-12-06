@@ -213,6 +213,7 @@ bool CC1muXp0pi::selection( AnalysisEvent* event ) {
   sel_no_reco_meson_ = true;
   sel_topo_cut_passed_ = false;
   sel_num_proton_candidates_ = -1;
+  sel_reject_flipped_track_ = false;
   size_t num_candidates = sel_muon_candidate_indices_.size();
 
   sel_num_muon_candidates_ = num_candidates;
@@ -275,6 +276,13 @@ bool CC1muXp0pi::selection( AnalysisEvent* event ) {
       if ( muon_mom >= MUON_P_MIN_MOM_CUT && muon_mom <= MUON_P_MAX_MOM_CUT ) {
         sel_muon_passed_mom_cuts_ = true;
       }
+      sel_track_length_size_ = event->track_length_->size();
+      sel_trk_bragg_mu_fwd_preferred_ = event->trk_bragg_mu_fwd_preferred_v_->at(p);
+      sel_track_chi2_muon_ = event->track_chi2_muon_->at(p);
+      if(sel_track_length_size_ == 1 && sel_trk_bragg_mu_fwd_preferred_ == 0 && sel_track_chi2_muon_ > 6.0){
+        sel_reject_flipped_track_ = true;
+      }
+
     }
     else{
       // instead of select a lead proton candidate, 
@@ -346,8 +354,8 @@ bool CC1muXp0pi::selection( AnalysisEvent* event ) {
   }
   sel_nu_mu_cc_ = false;
   sel_ccxp0meson_ = false;
-  sel_nu_mu_cc_ = sel_reco_vertex_in_fv_ && sel_pfp_starts_in_PCV_ && sel_has_muon_candidate_;
-  sel_ccxp0meson_ = sel_nu_mu_cc_ && sel_muon_contained_ && sel_muon_quality_ok_ && sel_no_reco_showers_ && sel_no_reco_meson_ && sel_topo_cut_passed_;
+  sel_nu_mu_cc_ = sel_reco_vertex_in_fv_ && sel_pfp_starts_in_PCV_ && sel_has_muon_candidate_ && !sel_reject_flipped_track_;
+  sel_ccxp0meson_ = sel_nu_mu_cc_ && sel_muon_contained_ && sel_muon_quality_ok_ && sel_no_reco_showers_ && sel_no_reco_meson_ && sel_topo_cut_passed_ && !sel_reject_flipped_track_;
   return sel_ccxp0meson_;
 }
 
@@ -687,8 +695,13 @@ void CC1muXp0pi::define_output_branches() {
   set_branch(&sel_no_reco_showers_, "sel_no_reco_showers");
   set_branch(&sel_no_reco_meson_, "sel_no_reco_meson");
   set_branch(&sel_topo_cut_passed_, "sel_topo_cut_passed");
+  set_branch(&sel_reject_flipped_track_, "sel_reject_flipped_track");
   set_branch(&sel_nu_mu_cc_, "sel_nu_mu_cc");
   set_branch(&sel_ccxp0meson_, "sel_ccxp0meson");
+
+  set_branch(&sel_track_length_size_, "sel_track_length_size");
+  set_branch(&sel_trk_bragg_mu_fwd_preferred_, "sel_trk_bragg_mu_fwd_preferred");
+  set_branch(&sel_track_chi2_muon_, "sel_track_chi2_muon");
 
 
   set_branch(mc_p4_mu_, "mc_p4_mu");
@@ -795,6 +808,10 @@ void CC1muXp0pi::reset() {
   sel_topo_cut_passed_ = false;
   sel_nu_mu_cc_ = false;
   sel_ccxp0meson_ = false;
+  sel_reject_flipped_track_ = false;
+  sel_track_length_size_ = BOGUS;
+  sel_trk_bragg_mu_fwd_preferred_ = false;
+  sel_track_chi2_muon_ = BOGUS;
 
   proton_index.clear();
   proton_energy.clear();

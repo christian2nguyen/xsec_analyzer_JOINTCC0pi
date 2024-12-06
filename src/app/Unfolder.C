@@ -139,6 +139,7 @@ void Unfolder(std::string XSEC_Config, std::string SLICE_Config, std::string Out
 
 	SliceHistogram* Slice_unf = SliceHistogram::make_slice_histogram( *xsec.result_.unfolded_signal_, Slice, uc_matrix.get() );
 	TH1* SliceHist = Slice_unf->hist_.get();
+        SliceHist->Scale(1.0, "width");
 	if (RT == "XsecUnits") {
 	  SliceHist->Scale(1.0 / conv_factor);
 	}

@@ -79,6 +79,11 @@ private:
   std::map<double, int> proton_index;
   std::map<double, double> proton_energy, proton_px, proton_py, proton_pz;
 
+  int sel_track_length_size_;
+  bool sel_trk_bragg_mu_fwd_preferred_;
+  double sel_track_chi2_muon_;
+  bool sel_reject_flipped_track_;
+
 
 // truth variables
         

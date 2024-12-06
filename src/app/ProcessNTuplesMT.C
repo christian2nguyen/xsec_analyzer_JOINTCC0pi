@@ -100,7 +100,7 @@ void analyze( const std::vector< std::string >& in_file_names,
   summed_pot_param->Write();
   out_file->Write();
 
-  const size_t nWorkers = 2;
+  const size_t nWorkers = 30;
 
   auto work_function = [&](int seed) {
 
