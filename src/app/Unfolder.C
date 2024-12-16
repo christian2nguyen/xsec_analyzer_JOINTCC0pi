@@ -121,7 +121,7 @@ void Unfolder(std::string XSEC_Config, std::string SLICE_Config, std::string Out
       //The following line will fall over if several active variables are used per Slice
       auto& SliceVar = sb.slice_vars_.at( Slice.active_var_indices_.front() );
 
-      std::string SliceVariableName = SliceVar.name_;
+      std::string SliceVariableName = SliceVar.name_ + std::to_string(sl_idx);
       SliceVariableName.erase(std::remove(SliceVariableName.begin(), SliceVariableName.end(), ' '), SliceVariableName.end());
 
       File->cd(RT.c_str());
@@ -152,7 +152,6 @@ void Unfolder(std::string XSEC_Config, std::string SLICE_Config, std::string Out
       //======================================================================================
       //Loop over all generator predictions and save them to the same output
 
-      /*
       //DB Still need to check this loop as I don't currently have generator prediction files for tutorial binning scheme
       for ( const auto& gen_pair : extr->get_prediction_map()) {
 	std::string gen_short_name = gen_pair.second->name();
@@ -162,12 +161,15 @@ void Unfolder(std::string XSEC_Config, std::string SLICE_Config, std::string Out
 	}
 
 	TH1D* temp_gen_hist = Matrix_To_TH1(temp_gen,gen_short_name,SliceVariableName,"Events");
-	temp_gen_hist->Write(("GenPred_"+SliceVariableName+"_"+gen_short_name).c_str());
+
+        SliceHistogram* Slice_unf = SliceHistogram::make_slice_histogram(*temp_gen_hist, Slice);
+        TH1* SliceHist = Slice_unf->hist_.get();
+        SliceHist->Scale(1.0, "width");
+	SliceHist->Write(("GenPred_"+SliceVariableName+"_"+gen_short_name).c_str());
 
 	if (DumpToText) dump_text_column_vector( OutputDirectory+"/"+RT+"_vec_table_" + gen_short_name + TextExtension, temp_gen );
 	if (DumpToPlot) draw_column_vector( OutputDirectory+"/"+RT+"_vec_table_" + gen_short_name + PlotExtension, temp_gen, (gen_short_name + " Prediction").c_str(), "Bin Number", "Cross Section [#times 10^{-38} cm^{2}]");
       }
-      */
 
     }
   }

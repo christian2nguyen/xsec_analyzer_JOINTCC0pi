@@ -4,6 +4,9 @@
 // Standard library includes
 #include <stdexcept>
 
+// Gnu Portability library (Gnulib) includes
+#include <getopt.h>
+
 // ROOT includes
 #include "TBranch.h"
 #include "TFile.h"
@@ -14,6 +17,8 @@
 #include "XSecAnalyzer/FilePropertiesManager.hh"
 #include "XSecAnalyzer/MCC9SystematicsCalculator.hh"
 #include "XSecAnalyzer/UniverseMaker.hh"
+
+static int verbose_flag;
 
 // Helper function that checks whether a given ROOT file represents an ntuple
 // from a reweightable MC sample. This is done by checking for the presence of
@@ -36,22 +41,122 @@ bool is_reweightable_mc_ntuple( const std::string& input_file_name ) {
 
 int main( int argc, char* argv[] ) {
 
-  if ( argc != 4 && argc != 5 ) {
-    std::cout << "Usage: univmake LIST_FILE"
-	      << " UNIVMAKE_CONFIG_FILE OUTPUT_ROOT_FILE"
-	      << " [FILE_PROPERTIES_CONFIG_FILE]\n";
-    return 1;
+  int c;
+
+  std::string list_file_name;
+  std::string univmake_config_file_name;
+  std::string output_file_name;
+  std::vector<int> index_parallel;
+  int iparallel = 0, nparallel = 1;
+
+  while ( true ) {
+
+    static struct option long_options[] =
+    {
+      // These options set a flag
+      {"files", required_argument, 0, 'f'},
+      {"bin", required_argument, 0, 'b'},
+      {"output", required_argument, 0, 'o'},
+      {"parallel", required_argument, 0, 'p'},
+      {"help", required_argument, 0, 'h'},
+
+      {0, 0, 0, 0}
+    };
+    // getopt_long stores the option index here
+    int option_index = 0;
+
+    c = getopt_long( argc, argv, "f:b:o:p:h", long_options, &option_index );
+
+    if( c == -1 ) break;
+
+    // Detect the end of the options
+    switch ( c )
+    {
+      case 'f':
+        // file properties list file name and type
+        list_file_name = std::string(optarg);
+        break;
+      case 'b':
+        // binning configuration
+        univmake_config_file_name = std::string(optarg);
+        break;
+      case 'o':
+        // output univmake files
+        output_file_name = std::string(optarg);
+        break;
+      case 'p':
+        // a option to run the unimake in parallel
+        index_parallel.push_back(atoi(optarg));
+        while (optind < argc && argv[optind][0] != '-'){
+          index_parallel.push_back(atoi(argv[optind]));
+          optind++;
+        }
+        break;
+      case 'h':
+      case '?':
+      default:
+        std::cout << "Usage: \n";
+        std::cout << "Options: \n";
+        std::cout << "    -f, --files; File properties."
+          << " list the input files \n";
+        std::cout << "    -b, --bin;   Binning configuration"
+          << " \n";
+        std::cout << "    -o, --output;   Output of the univmake \n";
+        std::cout << "    -p, --parallel;   Run univmake in parallel \n";
+        std::cout << "    -h, --help;   Print this help information. \n";
+        return 0;
+    }
+
+  } // option parsing loop
+
+  // Instead of reporting '--verbose' and '--brief' as they are encountered,
+  // we report the final status resulting from them
+  if ( verbose_flag ) puts( "verbose flag is set" );
+
+  // Print any remaining command line arguments (not options)
+  bool set_bin_scheme_name = false;
+  std::string bin_scheme_name;
+
+  if ( optind < argc ) {
+    printf( "non-option ARGV-elements: " );
+    while ( optind < argc ) {
+      if ( !set_bin_scheme_name ) {
+        bin_scheme_name = argv[ optind ];
+        set_bin_scheme_name = true;
+      }
+      printf( "%s ", argv[optind++] );
+    }
+    putchar( '\n' );
+  }
+  if ( argc <= 1 ) {
+    std::cout << "Usage: \n";
+    std::cout << "Options: \n";
+    std::cout << "    -f, --files; File properties."
+      << " list the input files \n";
+    std::cout << "    -b, --bin;   Binning configuration"
+      << " \n";
+    std::cout << "    -o, --output;   Output of the univmake \n";
+    std::cout << "    -p, --parallel;   Run univmake in parallel \n";
+    std::cout << "    -h, --help;   Print this help information. \n";
+    abort();
   }
 
-  std::string list_file_name( argv[1] );
-  std::string univmake_config_file_name( argv[2] );
-  std::string output_file_name( argv[3] );
 
   std::cout << "\nRunning univmake.C with options:\n";
   std::cout << "\tlist_file_name: " << list_file_name << '\n';
   std::cout << "\tunivmake_config_file_name: "
     << univmake_config_file_name << '\n';
   std::cout << "\toutput_file_name: " << output_file_name << '\n';
+
+  if(index_parallel.size() == 2 && index_parallel[1] > index_parallel[0] && index_parallel[1] > 0){
+    iparallel = index_parallel[0];
+    nparallel = index_parallel[1];
+    std::cout << "\tparallel index: " << iparallel << "  " << nparallel << "\n";
+  }
+  else{
+    std::cerr << "error setup of parallel \n";
+    throw;
+  }
 
   // Simultaneously check that we can write to the output file directory, and wipe any information within that file
   TFile* temp_file = new TFile(output_file_name.c_str(), "recreate");
@@ -117,12 +222,19 @@ int main( int argc, char* argv[] ) {
   for ( const auto& input_file_name : input_files ) {
     std::cout << '\t' << counter << '/' << input_files.size() << " - "
       << input_file_name << '\n';
+    std::cout << fpm.ntuple_type_to_string(fpm.get_ntuple_file_type(input_file_name)) << std::endl;
+    std::cout << "has event weight: " << ntuple_type_is_reweightable_mc(fpm.get_ntuple_file_type(input_file_name)) << std::endl;
 
     UniverseMaker univ_maker( univmake_config_file_name );
 
     univ_maker.add_input_file( input_file_name.c_str() );
+    univ_maker.setup_parallel(iparallel, nparallel);
 
-    bool has_event_weights = is_reweightable_mc_ntuple( input_file_name );
+    if(index_parallel.size()==2){
+    }
+
+    //bool has_event_weights = is_reweightable_mc_ntuple( input_file_name );
+    bool has_event_weights = ntuple_type_is_reweightable_mc(fpm.get_ntuple_file_type(input_file_name));
 
     if ( has_event_weights ) {
       // If the check above was successful, then run all of the histogram

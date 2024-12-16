@@ -73,6 +73,15 @@ void UniverseMaker::init( std::istream& in_file ) {
     reco_bins_.push_back( temp_bin );
   }
 
+  // Using the initialize 
+  ipara = 0;
+  npara = 1;
+
+}
+
+void UniverseMaker::setup_parallel(const int i, const int n){
+  ipara = i;
+  npara = n;
 }
 
 void UniverseMaker::add_input_file( const std::string& input_file_name )
@@ -168,8 +177,6 @@ void UniverseMaker::build_universes(
   }
 
   WeightHandler wh;
-//#define __TEST_MT__
-#ifndef __TEST_MT__
   wh.set_branch_addresses( input_chain_, universe_branch_names );
 
   // Make sure that we always have branches set up for the CV correction
@@ -199,8 +206,22 @@ void UniverseMaker::build_universes(
 
   int treenumber = 0;
   int totel_entries = input_chain_.GetEntries();
-  for ( long long entry = 0; entry < totel_entries; ++entry ) {
+
+  int start = 0;
+  int end = totel_entries;
+
+  if(npara > 1){
+    int step = (totel_entries + npara)/npara;
+    start = step*ipara;
+    end = (step*(ipara+1) > totel_entries) ? totel_entries : step*(ipara+1);
+  }
+
+  std::cout << "DEBUG  "  << start << "  "  << end << "  " << totel_entries <<  std::endl;
+
+  for ( long long entry = start; entry < end; ++entry ) {
     // Load the TTree for the current TChain entry
+    if(entry%5000 == 0)
+      std::cout << totel_entries << "    " << entry << std::endl;
     input_chain_.LoadTree( entry );
 
     // If the current entry is in a new TTree, then have all of the
@@ -356,7 +377,6 @@ void UniverseMaker::build_universes(
   } // TChain entries
 
   input_chain_.ResetBranchAddresses();
-#endif
 }
 
 void UniverseMaker::prepare_universes( const WeightHandler& wh ) {

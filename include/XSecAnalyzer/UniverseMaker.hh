@@ -353,6 +353,7 @@ class UniverseMaker {
 
     // Add an ntuple input file to the owned TChain
     void add_input_file( const std::string& input_file_name );
+    void setup_parallel(const int i, const int n);
 
     // Access the bin definitions
     inline const auto& true_bins() const { return true_bins_; }
@@ -447,4 +448,6 @@ class UniverseMaker {
     // std::unique_ptr< SelectionBase > sel_for_categories_;
     //FIXME: using normal pointer to avoid invalid pointer error
     SelectionBase *sel_for_categories_;
+      int ipara;
+      int npara;
 };

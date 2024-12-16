@@ -354,7 +354,7 @@ bool CC1muXp0pi::selection( AnalysisEvent* event ) {
   }
   sel_nu_mu_cc_ = false;
   sel_ccxp0meson_ = false;
-  sel_nu_mu_cc_ = sel_reco_vertex_in_fv_ && sel_pfp_starts_in_PCV_ && sel_has_muon_candidate_ && !sel_reject_flipped_track_;
+  sel_nu_mu_cc_ = sel_reco_vertex_in_fv_ && sel_pfp_starts_in_PCV_ && sel_has_muon_candidate_;
   sel_ccxp0meson_ = sel_nu_mu_cc_ && sel_muon_contained_ && sel_muon_quality_ok_ && sel_no_reco_showers_ && sel_no_reco_meson_ && sel_topo_cut_passed_ && !sel_reject_flipped_track_;
   return sel_ccxp0meson_;
 }

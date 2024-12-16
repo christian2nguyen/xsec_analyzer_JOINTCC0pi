@@ -89,6 +89,17 @@ void MakeConfig::ResPlots() {
         }
       }
 
+
+      std::cout << "temp\n";
+      std::cout << "stv_tree\n";
+      std::cout << SELECTION << '\n';
+      std::cout << true_bins.size() << '\n';
+      for ( const auto& tb : true_bins ) std::cout << tb << '\n';
+
+      std::cout << reco_bins.size() << '\n';
+      for ( const auto& rb : reco_bins ) std::cout << rb << '\n';
+
+
       std::stringstream temp_ss;
       temp_ss << "temp\n";
       temp_ss << "stv_tree\n";
@@ -164,7 +175,7 @@ void MakeConfig::Print(){
         double xlow = vect_block->at(i).block_true_->GetBinXLow(j);
         double xhigh = vect_block->at(i).block_true_->GetBinXHigh(j);
         auto& slice = add_slice( sb, vect_block->at(i).block_true_->GetVector(j),
-            xvar_idx, yvar_idx, xlow, xhigh );
+            yvar_idx, xvar_idx, xlow, xhigh );
         for( int k = 0; k < vect_block->at(i).block_true_->GetNBinsY(j); k++ ){
           slice.bin_map_[ k + 1 ].insert( true_bins.size() );
           true_bins.emplace_back(vect_block->at(i).block_true_->GetBinDef(j, k),
@@ -238,7 +249,7 @@ void MakeConfig::Print(){
         double xlow = vect_sideband->at(i).block_reco_->GetBinXLow(j);
         double xhigh = vect_sideband->at(i).block_reco_->GetBinXHigh(j);
         auto& slice = add_slice( sb, vect_sideband->at(i).block_reco_->GetVector(j),
-            xvar_idx, yvar_idx, xlow, xhigh );
+            yvar_idx, xvar_idx, xlow, xhigh );
         for( int k = 0; k < vect_sideband->at(i).block_reco_->GetNBinsY(j); k++ ){
           slice.bin_map_[ k + 1 ].insert( reco_bins.size() );
           reco_bins.emplace_back(vect_sideband->at(i).block_reco_->GetBinDef(j, k),
@@ -890,6 +901,7 @@ void Block1D::SetName( const std::string& name ) {
     throw std::runtime_error("Wrong name -> " + fName + ". The format of the name of 1D block must be <branch name>; <unit>.");
 }
 
+
 void Block2D::Init(){
   this->SetTitle( fTitle );
   this->SetName( fName );
@@ -1041,6 +1053,164 @@ void Block2D::SetTexTitle( const std::string& textitle ) {
       + ". The format of the title of 2D block must be <branch title>;"
       + " <unit>; <y branch title>; <y unit>." );
 }
+
+// using the 3D 
+
+/*
+void Block3D::Init(){
+  this->SetTitle( fTitle );
+  this->SetName( fName );
+  this->SetTexTitle( fTexTitle );
+
+  for (auto iter = fblock.cbegin(); iter != fblock.cend(); ++iter ) {
+    // Get an iterator to the map element after the current one. Due to the
+    // automatic sorting, this is guaranteed to contain the upper edge of the
+    // current delta_pT bin
+    xbin.push_back(iter->first);
+    auto next = iter;
+    ++next;
+    if(next == fblock.cend()) continue;
+    double value;
+    double slice_low = iter->first;
+    double slice_high = next->first;
+
+    fblock_vv_.push_back(iter->second);
+
+    for(size_t b = 0u; b < iter->second.size() - 1; b++){
+      double bin_low = iter->second.at(b);
+      double bin_high = iter->second.at(b + 1u);
+      std::string bin_def = "";
+      if ( fselection.size() != 0 ) {
+        bin_def = fselection + " && ";
+      }
+      bin_def += xName + Form(" >= %.3f && ", slice_low)
+        + xName + Form(" < %.3f && ", slice_high) + yName
+        + Form(" >= %.3f && ", bin_low) + yName + Form(" < %.3f", bin_high);
+      binDef.push_back( bin_def );
+    }
+  }
+}
+
+
+void Block2D::SetName( const std::string& name ) {
+  TString temp_name = name;
+  temp_name.ReplaceAll("#;",2,"#semicolon",10);
+  fName = temp_name;
+
+  std::vector<TString> str_container;
+
+  TString str1 = fName;
+  Int_t isc = str1.Index(";");
+  Int_t lns = str1.Length();
+  if(isc < 0)
+    throw std::runtime_error("Wrong name -> " + fName + ". The format of the name of 2D block must be <branch name>; <unit>; <y branch name>; <y unit>.");
+  while(isc >=0){
+    str_container.push_back(str1(0,isc));
+    str1 = str1(isc+1, lns);
+    isc = str1.Index(";");
+    lns = str1.Length();
+  }
+  str_container.push_back(str1);
+  if(str_container.size() == 4u){
+    xName = str_container[0];
+    xNameUnit = str_container[1];
+    yName =  str_container[2];
+    yNameUnit =  str_container[3];
+    str_container.clear();
+  }
+  else if(str_container.size() == 2u){
+    xName = str_container[0];
+    yName =  str_container[1];
+    xNameUnit = "";
+    yNameUnit = "";
+    str_container.clear();
+  }
+  else
+    throw std::runtime_error("Wrong name -> " + fName + ". The format of the name of 2D block must be <branch name>; <unit>; <y branch name>; <y unit>.");
+}
+
+
+
+void Block2D::SetTitle( const std::string& title ) {
+  TString temp_title = title;
+  temp_title.ReplaceAll("#;",2,"#semicolon",10);
+  fTitle = temp_title;
+
+  std::vector<TString> str_container;
+
+  TString str1 = fTitle;
+  Int_t isc = str1.Index(";");
+  Int_t lns = str1.Length();
+  if ( isc < 0 ) throw std::runtime_error("Wrong title -> " + fTitle
+      + ". The format of the title of 2D block must be <branch title>;"
+      + " <unit>; <y branch title>; <y unit>." );
+  while ( isc >=0 ) {
+    str_container.push_back(str1(0,isc));
+    str1 = str1(isc+1, lns);
+    isc = str1.Index(";");
+    lns = str1.Length();
+  }
+  str_container.push_back(str1);
+  if(str_container.size() == 4u){
+    xTitle = str_container[0];
+    xTitleUnit = str_container[1];
+    yTitle =  str_container[2];
+    yTitleUnit =  str_container[3];
+    str_container.clear();
+  }
+  else if(str_container.size() == 2u){
+    xTitle = str_container[0];
+    yTitle =  str_container[1];
+    xTitleUnit = "";
+    yTitleUnit = "";
+    str_container.clear();
+  }
+  else throw std::runtime_error( "Wrong title -> " + fTitle
+      + ". The format of the title of 2D block must be <branch title>;"
+      + " <unit>; <y branch title>; <y unit>." );
+}
+
+
+void Block2D::SetTexTitle( const std::string& textitle ) {
+  TString temp_textitle = textitle;
+  temp_textitle.ReplaceAll("#;",2,"#semicolon",10);
+  fTexTitle = temp_textitle;
+
+  std::vector<TString> str_container;
+
+  TString str1 = fTexTitle;
+  Int_t isc = str1.Index(";");
+  Int_t lns = str1.Length();
+  if( isc < 0 ) return;
+
+  while ( isc >=0 ) {
+    str_container.push_back(str1(0,isc));
+    str1 = str1(isc+1, lns);
+    isc = str1.Index(";");
+    lns = str1.Length();
+  }
+  str_container.push_back(str1);
+  if(str_container.size() == 4u){
+    xTexTitle = str_container[0];
+    xTexTitleUnit = str_container[1];
+    yTexTitle =  str_container[2];
+    yTexTitleUnit =  str_container[3];
+    str_container.clear();
+  }
+  else if(str_container.size() == 2u){
+    xTexTitle = str_container[0];
+    yTexTitle =  str_container[1];
+    xTexTitleUnit = "";
+    yTexTitleUnit = "";
+    str_container.clear();
+  }
+  else throw std::runtime_error( "Wrong title -> " + fTexTitle
+      + ". The format of the title of 2D block must be <branch title>;"
+      + " <unit>; <y branch title>; <y unit>." );
+}
+
+*/
+
 
 void MakeConfig::BinScheme() {
 

@@ -50,7 +50,7 @@ class Block: public TNamed {
     virtual std::vector<double> GetVector() = 0;
     virtual std::vector<double> GetVector( const int i ) = 0;
     virtual bool Is1D() = 0;
-    virtual bool Is2D() = 0;
+    virtual bool IsMD() = 0;
 
   protected:
 
@@ -116,7 +116,7 @@ class Block1D: public Block {
     std::vector<double> GetVector() { return fblock; }
     std::vector<double> GetVector( const int /*i*/ ) { return GetVector(); }
     bool Is1D() { return true; }
-    bool Is2D() { return false; }
+    bool IsMD() { return false; }
 
   protected:
 
@@ -202,7 +202,7 @@ class Block2D : public Block {
     std::vector<double> GetVector( const int i ) { return fblock_vv_[i]; }
     std::map<double, std::vector<double>> GetMap() { return fblock; }
     bool Is1D() { return false; }
-    bool Is2D() { return true; }
+    bool IsMD() { return true; }
 
   private:
 
@@ -237,6 +237,97 @@ class Block2D : public Block {
     void SetTexTitle(const std::string& title);
     void SetName( const std::string& name );
 };
+
+/*
+class Block3D : public Block {
+  public:
+    Block3D( const std::string& name, const std::string& title,
+      const std::map< double, std::vector<double> >& block2d,
+      const std::string& selection, int i ) : Block( name, title, i ),
+      fName( name ), fTitle( title ), fblock( block2d ),
+      fselection( selection ), binType( i )
+      { this->Init(); }
+
+    Block3D(const std::string& name, const std::string& title,
+     const std::string& textitle,
+     const std::map< double, std::vector<double> >& block2d,
+     const std::string& selection, int i ) : Block( name, title, i ),
+     fName( name ), fTitle( title ), fTexTitle( textitle ),
+     fblock( block2d ), fselection( selection ), binType( i )
+     { this->Init(); }
+
+    virtual ~Block3D() = default;
+    int GetNBinsX(){ return fblock_vv_.size(); }
+    int GetNBinsY( const int idx ) { return (fblock_vv_[idx].size() - 1); }
+    std::string GetBinDef( const int x, const int y ) {
+      int index = 0;
+      for( auto i = 0; i < x; i++ ) {
+        index += (fblock_vv_[i].size() - 1);
+      }
+      index += y;
+      return this->GetBinDef( index );
+    }
+    std::string GetBinDef( const int idx ){ return binDef[idx]; }
+    int GetBinType(){ return int(binType); }
+
+    Double_t GetBinXLow( const int i ) { return xbin[i]; }
+    Double_t GetBinXHigh( const int i ) { return xbin[i+1]; }
+
+    std::string GetXName() { return xName; }
+    std::string GetXNameUnit() { return xNameUnit; }
+    std::string GetXTitle() { return xTitle; }
+    std::string GetXTitleUnit() { return xTitleUnit; }
+    std::string GetXTexTitle() { return xTexTitle; }
+    std::string GetXTexTitleUnit() { return xTexTitleUnit; }
+    std::string GetYName() { return yName; }
+    std::string GetYNameUnit() { return yNameUnit; }
+    std::string GetYTitle() { return yTitle; }
+    std::string GetYTitleUnit() { return yTitleUnit; }
+    std::string GetYTexTitle() { return yTexTitle; }
+    std::string GetYTexTitleUnit() { return yTexTitleUnit; }
+    std::string GetSelection() { return fselection; }
+
+    std::vector<double> GetVector() { return GetVector( 0u ); }
+    std::vector<double> GetVector( const int i ) { return fblock_vv_[i]; }
+    std::map<double, std::vector<double>> GetMap() { return fblock; }
+    bool Is1D() { return false; }
+    bool IsMD() { return true; } // for Block more than 2D, using the same
+
+  private:
+
+    std::string fName;
+    std::string fTitle;
+    std::string fTexTitle;
+    std::map< double, std::vector<double> >  fblock;
+    std::vector< std::vector<double> > fblock_vv_;
+    std::vector<double> xbin;
+    std::string fselection;
+    int binType;
+
+    std::string xName;
+    std::string xNameUnit;
+    std::string xTitle;
+    std::string xTitleUnit;
+    std::string xTexTitle;
+    std::string xTexTitleUnit;
+
+    std::string yName;
+    std::string yNameUnit;
+    std::string yTitle;
+    std::string yTitleUnit;
+    std::string yTexTitle;
+    std::string yTexTitleUnit;
+
+    std::vector< std::string > binDef;
+
+  private:
+    void Init();
+    void SetTitle(const std::string& title);
+    void SetTexTitle(const std::string& title);
+    void SetName( const std::string& name );
+};
+*/
+
 
 
 class BlockTrueReco {
