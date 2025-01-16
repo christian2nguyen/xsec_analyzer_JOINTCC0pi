@@ -69,7 +69,7 @@ void tutorial_slice_plots(std::string FPM_Config, std::string SYST_Config, std::
   // Counter to ensure plots aren't overwritten
   uint FileNameCounter = 0;
   std::string Plot_Prefix = "SlicePlots";
-  std::string Plot_Suffix = ".pdf";
+  std::string Plot_Suffix = ".png";
   std::string PlotFileName = Plot_OutputDir + "/" + Plot_Prefix + Form("_%i",FileNameCounter) + Plot_Suffix;
 
   std::cout << "\nRunning Slice_Plots with options:" << std::endl;

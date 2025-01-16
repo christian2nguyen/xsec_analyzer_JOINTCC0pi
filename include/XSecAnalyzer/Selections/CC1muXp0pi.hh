@@ -63,6 +63,7 @@ private:
   int sel_muon_candidate_idx_;
   std::vector<int> sel_muon_candidate_indices_;
   std::vector<int> sel_muon_pid_scores_;
+  MyPointer<std::vector<int>> sel_xsec_fs_pdg_;
   int sel_num_muon_candidates_;
   int sel_num_proton_candidates_;
   int lead_p_candidate_idx_;

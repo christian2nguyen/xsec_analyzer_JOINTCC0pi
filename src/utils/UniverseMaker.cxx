@@ -312,6 +312,7 @@ void UniverseMaker::build_universes(
           // applied via safe_weight() above
           universe.hist_true_->Fill( tb.bin_index_, tb.weight_ * safe_wgt );
           for ( const auto& rb : matched_reco_bins ) {
+          //  std::cout << "DEBUG : " << __FILE__ << "  " << __LINE__ << "  " << tb.bin_index_ << "  " << rb.bin_index_ << "  " << tb.weight_ << "  " <<  rb.weight_  << "  " <<  safe_wgt << std::endl;
             universe.hist_2d_->Fill( tb.bin_index_, rb.bin_index_,
               tb.weight_ * rb.weight_ * safe_wgt );
           } // reco bins

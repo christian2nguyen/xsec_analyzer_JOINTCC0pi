@@ -1194,7 +1194,7 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       std::string cm_name;
       for ( int cm = 0; cm < count; ++cm ) {
         config_file >> cm_name;
-        if(detvar_universes_.size() == 10 && cm_name == "detVarLYdown") continue;
+//        if(detvar_universes_.size() == 10 && cm_name == "detVarLYdown") continue;
         if ( !matrix_map.count(cm_name) ) {
           throw std::runtime_error( "Undefined covariance matrix " + cm_name );
         }
@@ -1279,7 +1279,7 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
       auto ntuple_type = fpm.string_to_ntuple_type( ntuple_type_str );
       std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
-      if( ntuple_type == NFT::kDetVarMCLYdown && detvar_universes_.size() == 10) continue;
+ //     if( ntuple_type == NFT::kDetVarMCLYdown && detvar_universes_.size() == 10) continue;
       std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
       // Check that it's valid. If not, then complain.
@@ -1307,10 +1307,10 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
         detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVExtra ).get();
       }
-      else if(ntuple_type == NFT::kDetVarMCLYdown){
-      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
-        detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVLYdown ).get();
-      }
+//      else if(ntuple_type == NFT::kDetVarMCLYdown){
+//      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
+//        detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVLYdown ).get();
+//      }
 
       std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
       make_cov_mat( *this, temp_cov_mat, *detVar_cv_u,

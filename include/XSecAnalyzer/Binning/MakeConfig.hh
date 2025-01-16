@@ -55,8 +55,6 @@ class MakeConfig {
     // function has a unique name to use with TTree::Draw()
     static int hist_count;
 
-
-
     std::set< int > RUNS;
 
     void make_res_plots( const std::string& branchexpr,
@@ -86,5 +84,13 @@ class MakeConfig {
         const std::set<int>& runs,
         const std::string& universe_branch_name = "TunedCentralValue_UBGenie",
         size_t universe_index = 0u,
-        bool show_smear_numbers = false );
+        bool show_smear_numbers = false,
+        const std::string& str_title = "<title>",
+        const std::string& str_units =  "<units>");
+
+    void make_res_plots( std::istream& in_file,
+        const std::set<int>& runs,
+        const std::string& str_title,
+        const std::string& str_units);
+
 };

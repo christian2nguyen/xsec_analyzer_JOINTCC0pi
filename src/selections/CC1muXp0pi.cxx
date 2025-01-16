@@ -7,7 +7,7 @@
 
 CC1muXp0pi::CC1muXp0pi() : SelectionBase( "CC1muXp0pi" ) {
   //std::cout << __FUNCTION__ << "  " << __LINE__ << std::endl;
-   CalcType = kOpt4;
+  CalcType = kOpt4;
   booster = new BoosterHandle;
   XGBoosterCreate(NULL, 0, booster);
   assert(XGBoosterLoadModel(*booster, "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/lib/cc0pi_fstrack_pid_softprob.json") == 0);
@@ -356,6 +356,26 @@ bool CC1muXp0pi::selection( AnalysisEvent* event ) {
   sel_ccxp0meson_ = false;
   sel_nu_mu_cc_ = sel_reco_vertex_in_fv_ && sel_pfp_starts_in_PCV_ && sel_has_muon_candidate_;
   sel_ccxp0meson_ = sel_nu_mu_cc_ && sel_muon_contained_ && sel_muon_quality_ok_ && sel_no_reco_showers_ && sel_no_reco_meson_ && sel_topo_cut_passed_ && !sel_reject_flipped_track_;
+
+  if(sel_ccxp0meson_){
+    for ( int p = 0; p < event->num_pf_particles_; ++p ) {
+      // Only worry about direct neutrino daughters (PFParticles considered
+      // aughters of the reconstructed neutrino)
+      unsigned int generation = event->pfp_generation_->at( p );
+      if ( generation != 2u ){
+        sel_xsec_fs_pdg_->push_back(0);
+      }
+      else{
+        if ( p == sel_muon_candidate_idx_ ) {
+          sel_xsec_fs_pdg_->push_back(MUON);
+        }
+        else{
+          sel_xsec_fs_pdg_->push_back(PROTON);
+        }
+      }
+    }
+  }
+
   return sel_ccxp0meson_;
 }
 
@@ -488,15 +508,16 @@ void CC1muXp0pi::compute_reco_observables( AnalysisEvent* event ) {
   }
 
   if(proton_index.size() > 0){
-    int index = 0;
+    double temp_energy = -9999.;
     for(auto & itp: proton_index){
       TLorentzVector p4p(proton_px.at(itp.first), proton_py.at(itp.first), 
           proton_pz.at(itp.first), proton_energy.at(itp.first));
       reco_p4_p_vec_->push_back(p4p);
-      if(index==0){
+      
+      if(proton_energy.at(itp.first) > temp_energy){
+        temp_energy = proton_energy.at(itp.first);
         *reco_p4p_ = p4p;
       }
-      index++;
     }
   }
 
@@ -546,7 +567,7 @@ int CC1muXp0pi::categorize_event(AnalysisEvent* event) {
   }
 
   bool MCVertexInFV = point_inside_FV( this->true_FV(),
-    event->mc_nu_vx_, event->mc_nu_vy_, event->mc_nu_vz_ );
+      event->mc_nu_vx_, event->mc_nu_vy_, event->mc_nu_vz_ );
   if ( !MCVertexInFV ) {
     return kOOFV;
   }
@@ -575,10 +596,10 @@ int CC1muXp0pi::categorize_event(AnalysisEvent* event) {
                }
              }
       case 1:{
-		//     std::cout << __FILE__ << "  " << __LINE__ << std::endl;
-		//     std::cout << __FILE__ << "  " << __LINE__  << "  " << event->mc_nu_daughter_pdg_->size() << std::endl;
+               //     std::cout << __FILE__ << "  " << __LINE__ << std::endl;
+               //     std::cout << __FILE__ << "  " << __LINE__  << "  " << event->mc_nu_daughter_pdg_->size() << std::endl;
                if(event->mc_generator_pdg_){
-		//     std::cout << __FILE__ << "  " << __LINE__ << std::endl;
+                 //     std::cout << __FILE__ << "  " << __LINE__ << std::endl;
                  double output_proton_energy = 0;
                  int mother_id = -1;
                  for ( size_t p = 0u; p < event->mc_nu_daughter_pdg_->size(); ++p ) {
@@ -699,6 +720,7 @@ void CC1muXp0pi::define_output_branches() {
   set_branch(&sel_nu_mu_cc_, "sel_nu_mu_cc");
   set_branch(&sel_ccxp0meson_, "sel_ccxp0meson");
 
+  set_branch(sel_xsec_fs_pdg_, "sel_xsec_fs_pdg");
   set_branch(&sel_track_length_size_, "sel_track_length_size");
   set_branch(&sel_trk_bragg_mu_fwd_preferred_, "sel_trk_bragg_mu_fwd_preferred");
   set_branch(&sel_track_chi2_muon_, "sel_track_chi2_muon");
@@ -795,6 +817,7 @@ void CC1muXp0pi::reset() {
   sel_pfp_starts_in_PCV_ = false;
   sel_muon_candidate_indices_.clear();
   sel_muon_pid_scores_.clear();
+  sel_xsec_fs_pdg_->clear();
   sel_muon_candidate_idx_ = BOGUS_INDEX;
   sel_num_muon_candidates_ = BOGUS_INDEX;
   sel_num_proton_candidates_ = BOGUS;
