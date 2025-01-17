@@ -12,7 +12,7 @@ if [ "$MY_OS_REL" = "AlmaLinux" ]; then
 elif [ "$MY_OS_REL" = "Scientific Linux" ]; then
   # On SL7, we get ROOT as a side-effect of setting up uboonecode
   source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone_mcc9.sh
-  setup uboonecode v08_00_00_85 -q e17:prof
+  setup uboonecode v08_00_00_86 -q e17:prof
 else
   echo "WARNING: Unrecognized OS name \"${MY_OS_REL}\""
   echo "Unable to automatically set up ROOT"
@@ -37,5 +37,5 @@ else
 fi
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/exp/uboone/app/users/mastbaum/xgboost/build/lib64
-unset PYTHONHOME
-unset PYTHONPATH
+#unset PYTHONHOME
+#unset PYTHONPATH

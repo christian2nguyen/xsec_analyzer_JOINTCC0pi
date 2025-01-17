@@ -48,7 +48,7 @@ SHARED_OBJECTS := $(SHARED_SOURCES:.cxx=.o)
 .INTERMEDIATE: $(ROOT_DICTIONARY)
 
 all: $(SHARED_LIB) bin/ProcessNTuples bin/univmake bin/SlicePlots \
-  bin/Unfolder bin/BinScheme bin/StandaloneUnfold  bin/ProcessNTuplesMT
+  bin/Unfolder bin/BinScheme bin/StandaloneUnfold  bin/ProcessNTuplesMT bin/univmakeME
 
 $(ROOT_DICTIONARY):
 	rootcling -f $(LIB_DIR)/dictionaries.cc -c LinkDef.hh
@@ -71,7 +71,7 @@ bin/ProcessNTuplesMT: src/app/ProcessNTuplesMT.C $(SHARED_LIB)
 bin/univmake: src/app/univmake.C $(SHARED_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -O3 -o $@ $<
 
-bin/univmakeMT: src/app/univmakeMT.C $(SHARED_LIB)
+bin/univmakeME: src/app/univmakeME.C $(SHARED_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -O3 -o $@ $<
 
 bin/SlicePlots: src/app/Slice_Plots.C $(SHARED_LIB)

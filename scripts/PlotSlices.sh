@@ -3,14 +3,15 @@ num_expected=5
 
 if [ "$#" -ne "$num_expected" ]; then
   echo "Usage: ./PlotSlices.sh FPM_Config SYST_Config SLICE_Config Univ_File PlotOutputDir"
-  exit 1
+#  exit 1
 fi
 
-FPM_Config=$1
-SYST_Config=$2
-SLICE_Config=$3
-Univ_File=$4
-PlotOutputDir=$5
+run=${1}
+FPM_Config=${XSEC_ANALYZER_DIR}/configs/file_properties_fsi_current_${run}.txt
+SYST_Config=${XSEC_ANALYZER_DIR}/configs/systcalc.conf
+SLICE_Config=${XSEC_ANALYZER_DIR}/configs/ccxp0pi_slice_config.txt
+Univ_File="/exp/uboone/data/users/liangliu/workarea/fsi/univmake/univmake.root"
+PlotOutputDir=${XSEC_ANALYZER_DIR}/scripts/${run}
 
 if [ ! -f "${FPM_Config}" ]; then
   echo "FPM_Config \"${FPM_Config}\" not found"

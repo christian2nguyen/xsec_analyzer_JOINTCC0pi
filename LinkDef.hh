@@ -12,6 +12,8 @@
 #include <map>
 
 #ifdef __ROOTCLING__
+#pragma link C++ class std::vector< int >+;
+#pragma link C++ class std::vector< float >+;
 #pragma link C++ class std::vector< double >+;
 #pragma link C++ class std::string+;
 #pragma link C++ class std::map<std::string,std::vector<double> >+;
