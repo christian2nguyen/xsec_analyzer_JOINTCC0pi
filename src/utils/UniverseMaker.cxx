@@ -32,22 +32,14 @@ void UniverseMaker::init( std::istream& in_file ) {
   std::string sel_categ_name;
   in_file >> sel_categ_name;
 
-   std::cout<< "sel_categ_name = "<< sel_categ_name << std::endl;
-
   // Instantiate the requested selection and store it in this object for later
   // use
   SelectionFactory sel_fact;
-  
-      /////////////////////////////
-    // change here for May 10th 
-    ///////////////////////////
-  
   //SelectionBase* temp_sel = sel_fact.CreateSelection( sel_categ_name );
   //sel_for_categories_.reset( temp_sel );
   //FIXME: using normal pointer to avoid invalid pointer error
-  sel_for_categories_ = sel_fact.CreateSelection(sel_categ_name);
- //sel_for_categories_ = sel_fact.CreateSelection("category");
-  //sel_for_categories_ = sel_fact.CreateSelection("EventCategory");
+  sel_for_categories_ = sel_fact.CreateSelection( sel_categ_name);
+
   // Load the true bin definitions
   size_t num_true_bins;
   in_file >> num_true_bins;
@@ -56,11 +48,11 @@ void UniverseMaker::init( std::istream& in_file ) {
     TrueBin temp_bin;
     in_file >> temp_bin;
 
-    
+    /*
     // DEBUG
     std::cout << "tb = " << tb << '\n';
     std::cout << temp_bin << '\n';
-    
+    */
 
     true_bins_.push_back( temp_bin );
   }
@@ -72,11 +64,11 @@ void UniverseMaker::init( std::istream& in_file ) {
     RecoBin temp_bin;
     in_file >> temp_bin;
 
-    
+    /*
     // DEBUG
     std::cout << "rb = " << rb << '\n';
     std::cout << temp_bin << '\n';
-    
+    */
 
     reco_bins_.push_back( temp_bin );
   }
@@ -86,26 +78,20 @@ void UniverseMaker::init( std::istream& in_file ) {
 void UniverseMaker::add_input_file( const std::string& input_file_name )
 {
   // Check to make sure that the input file contains the expected ntuple
-  std::cout << "DEBUG UniverseMaker::add_input_file - Point 0"<<std::endl;
   TFile temp_file( input_file_name.c_str(), "read" );
 
   // Temporary storage
   TTree* temp_tree;
-  std::cout << "DEBUG UniverseMaker::add_input_file - Point 1"<<std::endl;
+
   std::string tree_name = input_chain_.GetName();
   temp_file.GetObject( tree_name.c_str(), temp_tree );
   if ( !temp_tree ) throw std::runtime_error( "Missing ntuple TTree "
     + tree_name + " in the input ntuple file " + input_file_name );
-  
-  std::cout << "DEBUG UniverseMaker::add_input_file - Point 3"<<std::endl;
+
   // If we've made it here, then the input file has passed all of the checks.
   // Add it to the input TChain.
   input_chain_.AddFile( input_file_name.c_str() );
-    std::cout << "DEBUG UniverseMaker::add_input_file - Point 4"<<std::endl;
 }
-
-
-
 
 void UniverseMaker::prepare_formulas() {
 
@@ -142,25 +128,16 @@ void UniverseMaker::prepare_formulas() {
 
   // Create one TTreeFormula for each true event category
   const auto& category_map = sel_for_categories_->category_map();
-  
-  std::cout<< "category_map.size() = " << category_map.size()<< std::endl;
-  
   Universe::set_num_categories( category_map.size() );
   for ( const auto& category_pair : category_map ) {
 
     int cur_category = static_cast< int >( category_pair.first );
     std::string str_category = std::to_string( cur_category );
-    std::cout<<"str_category :: "<< sel_for_categories_->name() << " = "<<  str_category <<  std::endl;
+
     std::string category_formula_name = "category_formula_" + str_category;
 
-    /////////////////////////////
-    // change here for May 10th 
-    ///////////////////////////
-
-    std::string category_cuts = sel_for_categories_->name() + "_EventCategory == " + str_category;
-      // changed for may10 run
-      
-    //std::string category_cuts = "category == " + str_category;
+    std::string category_cuts = sel_for_categories_->name()
+      + "_EventCategory == " + str_category;
 
     auto cbf = std::make_unique< TTreeFormula >(
       category_formula_name.c_str(), category_cuts.c_str(), &input_chain_ );
@@ -210,12 +187,9 @@ void UniverseMaker::build_universes(
 
   // Now prepare the vectors of Universe objects with the correct sizes
   this->prepare_universes( wh );
-  std::cout<<"DEBUG UniverseMaker::build_universes - Point 6"<<std::endl;
 
   int treenumber = 0;
   for ( long long entry = 0; entry < input_chain_.GetEntries(); ++entry ) {
-  
-  if(entry%10000==0) std::cout<<"\rUniverseMaker::build_universes "<<entry<<" of "<<input_chain_.GetEntries()<<std::flush;
     // Load the TTree for the current TChain entry
     input_chain_.LoadTree( entry );
 
@@ -372,8 +346,6 @@ void UniverseMaker::build_universes(
   } // TChain entries
 
   input_chain_.ResetBranchAddresses();
-  
-  std::cout<<"DEBUG UniverseMaker::ResetBranchAddresses - Point 18"<<std::endl;
 }
 
 void UniverseMaker::prepare_universes( const WeightHandler& wh ) {
@@ -511,15 +483,11 @@ void UniverseMaker::save_histograms(
   // will be saved. Ensure that it is the active file here before writing
   // out the histograms.
   sub_tdir->cd();
- unsigned int iweights = 0;
+
   for ( auto& pair : universes_ ) {
     auto& u_vec = pair.second;
-     unsigned int iuni = 0;
-     iweights++;
     for ( auto& univ : u_vec ) {
       // Always save the reco histograms
-      iuni++;
-      std::cout<<"\r"<<iweights<<"/"<<universes_.size()<<" weights ("<<pair.first<<") - "<<iuni<<"/"<<u_vec.size()<<" universes                    "<<std::flush;
       univ.hist_reco_->Write();
       univ.hist_reco2d_->Write();
 
@@ -531,8 +499,6 @@ void UniverseMaker::save_histograms(
         univ.hist_categ_->Write();
         univ.hist_true2d_->Write();
       }
-      else std::cout<<"DEBUG - No entries "<<pair.first<<" "<<iuni<<std::flush;
     } // universes
   } // weight names
-   std::cout<<"\nDEBUG ---- Done ---"<<std::endl;
 }

@@ -1,5 +1,7 @@
 // XSecAnalyzer includes
 #include "XSecAnalyzer/SystematicsCalculator.hh"
+//#include <filesystem> only in AL9 i think liang said code removed that was trying it
+#include <TSystem.h>
 
 void set_stats_and_dir( Universe& univ ) {
   univ.hist_reco_->SetStats( false );
@@ -451,6 +453,29 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
       // multisims of detvars
       int detvar_index = 0;
       int file_set_size = file_set.size();
+      double detvar_file_pot = 0.;
+
+      // before 
+      std::vector<double> file_pot_vec;
+      for ( const std::string& file_name : file_set ) {
+        if ( is_mc ) {
+          // MC files have the simulated POT stored alongside the ntuple
+          // TODO: use the TDirectoryFile to handle this rather than
+          // pulling it out of the original ntuple file
+          TFile temp_mc_file( file_name.c_str(), "read" );
+          TParameter<float>* temp_pot = nullptr;
+          temp_mc_file.GetObject( "summed_pot", temp_pot );
+          if ( !temp_pot ) throw std::runtime_error(
+            "Missing POT in MC file!" );
+          file_pot_vec.push_back(temp_pot->GetVal());
+        }
+        else {
+          // We can ask the FilePropertiesManager for the data POT values
+          file_pot_vec.push_back(fpm.data_norm_map().at( file_name ).pot_);
+        }
+
+      }
+
       for ( const std::string& file_name : file_set ) {
 
         std::cout << "PROCESSING universes for " << file_name << '\n';
@@ -464,7 +489,6 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
         // Get the simulated or measured POT belonging to the current file.
         // This will be used to normalize the relevant histograms
         double file_pot = 0.;
-        double detvar_file_pot = 0.;
         if ( is_mc ) {
           // MC files have the simulated POT stored alongside the ntuple
           // TODO: use the TDirectoryFile to handle this rather than
@@ -725,18 +749,22 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
 //            temp_scale_factor = total_bnb_data_pot_ / file_pot;
 //          }
 
+          double total_dv_mc_pot =0;
+          for(auto& pot: file_pot_vec){
+            total_dv_mc_pot+=pot;
+          }
+
           double temp_run_pot = run_to_bnb_pot_map.at( run );
-          double temp_scale_factor = temp_run_pot / file_pot;
+          double temp_scale_factor = (temp_run_pot / total_dv_mc_pot) * (file_pot / total_dv_mc_pot);
+
           // Apply the scaling factor defined above to all histograms that
           // will be owned by the new Universe
-          if(is_altCV){
-            hist_reco->Scale( temp_scale_factor );
-            hist_true->Scale( temp_scale_factor );
-            hist_2d->Scale( temp_scale_factor );
-            hist_categ->Scale( temp_scale_factor );
-            hist_reco2d->Scale( temp_scale_factor );
-            hist_true2d->Scale( temp_scale_factor );
-          }
+          hist_reco->Scale( temp_scale_factor );
+          hist_true->Scale( temp_scale_factor );
+          hist_2d->Scale( temp_scale_factor );
+          hist_categ->Scale( temp_scale_factor );
+          hist_reco2d->Scale( temp_scale_factor );
+          hist_true2d->Scale( temp_scale_factor );
 
           // Add the scaled contents of these histograms to the
           // corresponding histograms in the new Universe object
@@ -747,23 +775,12 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
           temp_univ_ptr->hist_reco2d_->Add( hist_reco2d.get() );
           temp_univ_ptr->hist_true2d_->Add( hist_true2d.get() );
 
-          if(is_detVar && detvar_index == file_set_size){
-            temp_scale_factor = temp_run_pot / detvar_file_pot;
-            temp_univ_ptr->hist_reco_->Scale(temp_scale_factor);
-            temp_univ_ptr->hist_true_->Scale(temp_scale_factor);
-            temp_univ_ptr->hist_2d_->Scale(temp_scale_factor);
-            temp_univ_ptr->hist_categ_->Scale(temp_scale_factor);
-            temp_univ_ptr->hist_reco2d_->Scale(temp_scale_factor);
-            temp_univ_ptr->hist_true2d_->Scale(temp_scale_factor);
-          }
-
-
           // Adjust the owned histograms to avoid auto-deletion problems
           set_stats_and_dir( *temp_univ_ptr );
 
           // If one wasn't present before, then move the finished Universe
           // object into the map
-          if ( is_detVar && detvar_universes_.count(type) == 0 ) {
+          if ( is_detVar && detvar_universes_.count(type) == 0) {
             detvar_universes_[ type ].reset( temp_univ.release() );
           }
           else if ( is_altCV && !prior_altCV ) { // is_altCV
@@ -834,17 +851,14 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
           // each universe to the BNB data POT for the current run
           double run_bnb_pot = run_to_bnb_pot_map.at( run );
           double rw_scale_factor = run_bnb_pot / file_pot;
-         
-          std::cout<<"run_bnb_pot = "<< run_bnb_pot << std::endl;
-          std::cout<<"file_pot = "<< file_pot << std::endl;
-          std::cout<<"rw_scale_factor = "<< rw_scale_factor << std::endl;
+
           // Iterate over the reweighting universes, retrieve the
           // histograms for each, and add their POT-scaled contributions
           // from the current ntuple file to the total
           for ( auto& rw_pair : rw_universes_ ) {
             std::string univ_name = rw_pair.first;
             auto& univ_vec = rw_pair.second;
-            std::cout<< "univ_name = "<< univ_name << std::endl;
+
             for ( size_t u_idx = 0u; u_idx < univ_vec.size(); ++u_idx ) {
               // Get a reference to the current universe object
               auto& universe = *univ_vec.at( u_idx );
@@ -1157,7 +1171,7 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
   std::ifstream config_file( syst_config_file_name_ );
   std::string name, type;
   while ( config_file >> name >> type ) {
-std::cout<<"Getting covariances with Name:  "<< name<< std::endl;
+
     CovMatrix temp_cov_mat = this->make_covariance_matrix( name );
 
     // If the current covariance matrix is defined as a sum of others, then
@@ -1168,7 +1182,6 @@ std::cout<<"Getting covariances with Name:  "<< name<< std::endl;
       std::string cm_name;
       for ( int cm = 0; cm < count; ++cm ) {
         config_file >> cm_name;
-        if(detvar_universes_.size() == 10 && cm_name == "detVarLYdown") continue;
         if ( !matrix_map.count(cm_name) ) {
           throw std::runtime_error( "Undefined covariance matrix " + cm_name );
         }
@@ -1249,7 +1262,6 @@ std::cout<<"Getting covariances with Name:  "<< name<< std::endl;
 
       const auto& fpm = FilePropertiesManager::Instance();
       auto ntuple_type = fpm.string_to_ntuple_type( ntuple_type_str );
-      if( ntuple_type == NFT::kDetVarMCLYdown && detvar_universes_.size() == 10) continue;
 
       // Check that it's valid. If not, then complain.
       bool is_not_detVar = !ntuple_type_is_detVar( ntuple_type );
@@ -1270,9 +1282,6 @@ std::cout<<"Getting covariances with Name:  "<< name<< std::endl;
         || ntuple_type == NFT::kDetVarMCRecomb2 )
       {
         detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVExtra ).get();
-      }
-      else if(ntuple_type == NFT::kDetVarMCLYdown){
-        detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVLYdown ).get();
       }
 
       make_cov_mat( *this, temp_cov_mat, *detVar_cv_u,

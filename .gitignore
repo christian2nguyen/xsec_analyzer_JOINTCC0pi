@@ -10,6 +10,7 @@ plot_maker/unfold/scriptholder/
 plot_maker/unfold/calc_total_fractional_uncertainties_per_bin.cxx
 plot_maker/unfold/setup_generators.sh
 plot_maker/include/scriptholder/
+src/utils/scriptholder
 stv_root_dict_includes_rdict.pcm
 .DS_Store
 stv_root_dict_rdict.pcm
