@@ -31,7 +31,7 @@
 #include "TH1.h"
 #include "TF1.h"
 #include <TH1D.h>
-#include "UBTH2Poly.h"
+#include "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/include/XSecAnalyzer/UBTH2Poly.hh"
 
 
 template <class HIST = TH1D, class CATEGORY = int>

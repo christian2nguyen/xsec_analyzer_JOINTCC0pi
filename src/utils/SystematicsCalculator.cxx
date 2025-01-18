@@ -834,14 +834,17 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
           // each universe to the BNB data POT for the current run
           double run_bnb_pot = run_to_bnb_pot_map.at( run );
           double rw_scale_factor = run_bnb_pot / file_pot;
-
+         
+          std::cout<<"run_bnb_pot = "<< run_bnb_pot << std::endl;
+          std::cout<<"file_pot = "<< file_pot << std::endl;
+          std::cout<<"rw_scale_factor = "<< rw_scale_factor << std::endl;
           // Iterate over the reweighting universes, retrieve the
           // histograms for each, and add their POT-scaled contributions
           // from the current ntuple file to the total
           for ( auto& rw_pair : rw_universes_ ) {
             std::string univ_name = rw_pair.first;
             auto& univ_vec = rw_pair.second;
-
+            std::cout<< "univ_name = "<< univ_name << std::endl;
             for ( size_t u_idx = 0u; u_idx < univ_vec.size(); ++u_idx ) {
               // Get a reference to the current universe object
               auto& universe = *univ_vec.at( u_idx );
@@ -1154,7 +1157,7 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
   std::ifstream config_file( syst_config_file_name_ );
   std::string name, type;
   while ( config_file >> name >> type ) {
-
+std::cout<<"Getting covariances with Name:  "<< name<< std::endl;
     CovMatrix temp_cov_mat = this->make_covariance_matrix( name );
 
     // If the current covariance matrix is defined as a sum of others, then

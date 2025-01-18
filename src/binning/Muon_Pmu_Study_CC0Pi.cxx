@@ -5,6 +5,7 @@ Muon_Pmu_Study_CC0Pi::Muon_Pmu_Study_CC0Pi() : BinSchemeBase( "Muon_Pmu_Study_CC
 
 void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
 
+std::cout<<"Starting::Muon_Pmu_Study_CC0Pi"<<std::endl; 
   /////// Set some standard variables before managing the blocks
 
   // TTree name for the post-processed ntuples
@@ -14,7 +15,7 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   runs_to_use_ = { 1,2,3 };
 
   // Prefix for the output bin and slice configuration text files
-  out_config_prefix_ = "Muon_TrackSlices_mcs_study_";
+  out_config_prefix_ = "Muon_MCS_Panels_v2";
 
   // Selection to use with this binning scheme
   selection_name_ = "JOINTCC0pi";
@@ -31,34 +32,108 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
   title, textitle,
   selection_true, selection_reco,branchexpr;
 
-  selection_true = "mc_is_cc0pi_signal";
-  selection_reco = "sel_CC0pi && sel_muon_contained";
+  selection_true = "mc_is_cc0pi_signal &&  mc_num_protons > 0";
+  selection_reco = "sel_CC0pi && sel_muon_contained && sel_num_proton_candidates > 0";
 
+
+  
+  const std::string CCNPI_SIDEBAND_SELECTION =
+  "sel_reco_vertex_in_FV && sel_pfp_starts_in_PCV"
+  " && sel_has_muon_candidate && sel_muon_contained && sel_topo_cut_passed"
+  " && sel_no_reco_showers && sel_muon_passed_mom_cuts"
+  " && sel_has_pion_candidate"
+  " && sel_num_pion_candidates > 0"
+  " && sel_n_bdt_other == 0" 
+  " && sel_n_bdt_invalid == 0";
+
+  
+  
   // First block: cos_theta_mu in 2D
-  std::vector<double> Pmu_2d = { 0.1, 0.24, 0.3, 0.38, 0.48, 0.7, 0.85, 1.28, 1.58, 2.0};
-  std::vector<double> trk_len_v_edges = {0, 10, 20, 30, 40, 50, 60, 80, 100 ,120, 140, 160, 180, 200, 250, 300, 350};
+  std::vector<double> Pmu_2d = { 0.1, 0.24, 0.3, 0.38, 0.48, 0.7, 0.85, 1.28, 2.0};
+  std::vector<double> trk_len_v_edges = {0, 20, 40, 60, 80, 100 ,120, 140, 160, 180, 200, 250, 300, 350,500,800,1200};
   std::vector<double> costheta = {-1.00, -0.50, 0.00, 0.27, 0.45, 0.62, 0.76, 0.86, 0.94, 1.0};
+  std::vector<double> Nprotonsedges{-0.5, 0.5, 1.5, 2.5, 3.5};
+  std::vector<double> Sidesedges{-.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5};
+    
+ std::vector<double> Pmu_1d = Pmu_2d;//{0.1,0.2,0.225,0.25,0.275,0.3,0.325,0.375,0.425,0.5,0.6,0.75,0.95,1.25,2};
+ std::vector<double> costheta_1d = costheta; //{ -1.0,-0.775,-0.65,-0.55,-0.45,-0.375,-0.3,-0.2,-0.125,-0.05, 0.025,0.1, 0.175,0.25,0.325,0.4,0.475,0.55,0.625,0.675, 0.725,0.775,0.825,0.85,0.875, 0.9,0.925,0.95,0.975,1.0};
+
+
+
+  std::map< double, std::vector<double> > MUON_2D_BIN_EDGES_inclusive = {
+// the 2D binning of inclusive but took the max limit of 2 GeV and not 2.5 GeV which its given  
+{ -1.00, 
+     {0.1, 0.24, 0.3, 2.0} },
+{ -0.50,
+    {0.1,  0.24, 0.3, 0.38, 2.0} },
+ { 0.00, 
+   {0.1,   0.24, 0.3, 0.38, 2.0} },
+ { 0.27, 
+     {0.1,  0.2,  0.3,  0.48, 2.0} },
+ { 0.45, 
+     {0.1, 0.24, 0.38, 0.48, 2.0} },
+ { 0.62, 
+     {0.1, 0.24, 0.38, 0.48, 2.0} },
+ { 0.76, 
+     {0.1, 0.24, 0.38, 0.48, 0.68, 2.0} },
+ { 0.86, 
+     {0.1, 0.48, 0.68, 0.85,  2.0} },
+ { 0.94, 
+     {0.1, 0.48, 0.68, 0.85, 1.28, 2.0} },
+ { 1.0, {} }
+};
+   
+   
+   std::cout<<"1D"<<std::endl; 
 
    branchexpr = "mc_p3_mu.Mag();GeV/c";
     title = "P_{#mu};GeV/c";
   // the tex title "tex title; units" is used in latex format
   textitle = "P_{\\mu};GeV/c";
-  Block1D *b1dt_Pmu_true = new Block1D(branchexpr, title, textitle, Pmu_2d, selection_true, kSignalTrueBin);
-  branchexpr = " p3_mu_mcs.Mag();GeV/c";
+  Block1D *b1dt_Pmu_true = new Block1D(branchexpr, title, textitle, Pmu_1d, selection_true, kSignalTrueBin);
+  branchexpr = "p3mu_mcs.Mag();GeV/c";
   // only the name of branch and the selection is different from true.
-  Block1D *b1dt_Pmu_reco = new Block1D(branchexpr, title, textitle, Pmu_2d, selection_reco, kOrdinaryRecoBin);
+  Block1D *b1dt_Pmu_reco = new Block1D(branchexpr, title, textitle, Pmu_1d, selection_reco, kOrdinaryRecoBin);
   vect_block.emplace_back(b1dt_Pmu_true,b1dt_Pmu_reco);
   
   branchexpr = "mc_p3_mu.CosTheta();";
   title = "cos#theta;";
   // the tex title "tex title; units" is used in latex format
   textitle = "\\cos\\theta;";
-  Block1D *b1dt_cos_true = new Block1D(branchexpr, title, textitle, costheta, selection_true, kSignalTrueBin);
- branchexpr = " p3_mu_mcs.CosTheta();";
+  Block1D *b1dt_cos_true = new Block1D(branchexpr, title, textitle, costheta_1d, selection_true, kSignalTrueBin);
+ 
+ branchexpr = "p3mu_mcs.CosTheta();";
   // only the name of branch and the selection is different from true.
-  Block1D *b1dt_cos_reco = new Block1D(branchexpr, title, textitle, costheta, selection_reco, kOrdinaryRecoBin);
+  Block1D *b1dt_cos_reco = new Block1D(branchexpr, title, textitle, costheta_1d, selection_reco, kOrdinaryRecoBin);
   vect_block.emplace_back(b1dt_cos_true,b1dt_cos_reco);
   
+  // the title "title; unit" is used in plot in root style
+  title ="cos#theta;p_{#mu};GeV/c;";
+  // the tex title "tex title; units" is used in latex format
+  textitle = "P_{\\mu};GeV/c;\\cos\\theta;";
+  
+  // selection
+ std::cout<<"12D"<<std::endl; 
+
+
+ branchexpr_reco_scheme2 = "p3mu_mcs.CosTheta();;p3mu_mcs.Mag();GeV/c";
+ branchexpr_true_scheme2 = "mc_p3_mu.CosTheta();;mc_p3_mu.Mag();GeV/c";
+
+Block2D *b2dmuon_mom_costheta_true_scheme2 = new Block2D(branchexpr_true_scheme2,
+      title,
+      textitle,
+      MUON_2D_BIN_EDGES_inclusive,
+      selection_true, kSignalTrueBin);
+      
+  Block2D *b2dmuon_mom_costheta_reco_scheme2 = new Block2D(branchexpr_reco_scheme2,
+       title,
+      textitle,
+      MUON_2D_BIN_EDGES_inclusive,
+      selection_reco, kOrdinaryRecoBin);
+      
+
+  //vect_block.emplace_back(b2dmuon_mom_costheta_true_scheme2, b2dmuon_mom_costheta_reco_scheme2);
+
  
    // Block2D *b2d_TrackLength_true = new Block2D(branchexpr_reco_scheme1,
    //   "muon mom; GeV/c; TrkLenght_{#mu};cm ", 
@@ -94,22 +169,37 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
 
 
   Block1D *b1r_sideband_trklengh = new Block1D(branchexpr_sideband, title, textitle, trk_len_v_edges, selection_reco, kSidebandRecoBin);
-  //vect_sideband.emplace_back(b1r_sideband_trklengh);
-  //vect_block.emplace_back(b1r_sideband_trklengh,b1r_sideband_trklengh);
 
-  vect_sideband.emplace_back(b1r_sideband_trklengh);
-  branchexpr_sideband = "p3_mu_mcs.CosTheta();;trk_len_v[ muon_candidate_idx ];cm";
+   vect_sideband.emplace_back(b1r_sideband_trklengh);
+  
+  
+   branchexpr_sideband = "sel_PanelClosesttoEndMuonTrk;SideN";
+   // the title "title; unit" is used in plot in root style
+  title ="SideN;";
+  // the tex title "tex title; units" is used in latex format
+  textitle = "SideN;";
+
+
+  Block1D *b1r_sideband_Sides = new Block1D(branchexpr_sideband, title, textitle, Sidesedges, selection_reco, kSidebandRecoBin);
+   vect_sideband.emplace_back(b1r_sideband_Sides);
+  
+  
+  branchexpr_sideband = "p3mu_mcs.CosTheta();;trk_len_v[ muon_candidate_idx ];cm";
   title = "cos#theta; ; trklenght;";
   textitle = "cos#theta; ; trklenght;";
+  
+  
+  
+  
   
     std::map< double, std::vector<double> > MUON_2D_BIN_EDGES_inclusive_trklenght = {
 // the 2D binning of inclusive but took the max limit of 2 GeV and not 2.5 GeV which its given
 { -1.00,
-    {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350} },
+    {0, 10, 20, 30, 40, 50, 60, 70, 100,  1200} },
 { -0.50,
-    {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350}},
+    {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 1200}},
 { 0.00,
-    { 0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350 }},
+    { 0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 1200}},
  { 0.27,
      trk_len_v_edges },
  { 0.45,
@@ -125,8 +215,8 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
  { 1.0, {} }
 };
 
-  Block2D *b2r_sideband = new Block2D(branchexpr_sideband, title, textitle, MUON_2D_BIN_EDGES_inclusive_trklenght , selection_reco, kSidebandRecoBin);
-  vect_sideband.emplace_back(b2r_sideband);
+  //Block2D *b2r_sideband = new Block2D(branchexpr_sideband, title, textitle, MUON_2D_BIN_EDGES_inclusive_trklenght , selection_reco, kSidebandRecoBin);
+  //vect_sideband.emplace_back(b2r_sideband);
 
 
 /*
@@ -155,7 +245,7 @@ void Muon_Pmu_Study_CC0Pi::DefineBlocks() {
  { 1.0, {} }
 };
 
- branchexpr_reco_scheme1 = "p3_mu.CosTheta();GeV/c;trk_len_v[ muon_candidate_idx ];cm";
+ branchexpr_reco_scheme1 = "p3mu_mcs.CosTheta();GeV/c;trk_len_v[ muon_candidate_idx ];cm";
 
 
     Block2D *b2d_TrackLength_reco_inclusive= new Block2D(branchexpr_reco_scheme1,
@@ -167,17 +257,17 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
  //vect_block.emplace_back(b2d_TrackLength_reco_inclusive,b2d_TrackLength_reco_inclusive);
 */
 
-    branchexpr_reco_scheme1 = "p3_mu_mcs.Mag();GeV/c;trk_len_v[ muon_candidate_idx ];cm";
+    branchexpr_reco_scheme1 = "p3mu_mcs.Mag();GeV/c;trk_len_v[ muon_candidate_idx ];cm";
     std::map< double, std::vector<double> > MUON_2D_BIN_EDGES_trackLength = {
-    { 0.1, {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350} },
-    { 0.24, {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350} },
-    { 0.3,  {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350} },
+    { 0.1, {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350,1200} },
+    { 0.24, {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350,1200} },
+    { 0.3,  {0, 10, 20, 30, 40, 50, 60, 70, 80, 100, 350,1200} },
     { 0.38, trk_len_v_edges },
     { 0.48, trk_len_v_edges },
     { 0.7,  trk_len_v_edges },
     { 0.85, trk_len_v_edges },
-    { 1.28, {0,50, 80, 100, 120, 140, 160, 180, 200, 250, 300, 350}},
-    { 1.58, {0,50, 80, 100, 120, 140, 160, 180, 200, 250, 300, 350} },
+    { 1.28, {0, 50, 100, 120, 140, 160, 180, 200, 250, 300, 350,1200}},
+    { 1.58, {0, 50, 100, 120, 140, 160, 180, 200, 250, 300, 350,1200} },
     { 2.0, {} }
     };
   
@@ -187,9 +277,9 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
       MUON_2D_BIN_EDGES_trackLength, selection_reco, kSidebandRecoBin);
     //vect_sideband.emplace_back(b2d_TrackLength_reco);
 
-    vect_sideband.emplace_back(b2d_TrackLength_reco);
+    //vect_sideband.emplace_back(b2d_TrackLength_reco);
   
- 
+ std::cout <<"LINE 274"<<std::endl; 
   
   
   std::map< double, std::vector<double> > multiply_Pmu  = {
@@ -201,13 +291,13 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
   }; 
   
   
-     branchexpr_reco_scheme1 = "sel_num_proton_candidates;;p3_mu_mcs.Mag();GeV/c";
+     branchexpr_reco_scheme1 = "sel_num_proton_candidates;;p3mu_mcs.Mag();GeV/c";
       Block2D *b2d_Mulitply_pmu_reco = new Block2D(branchexpr_reco_scheme1,
       "Nprotons;;P_{#mu};GeV/c", 
       "Nprotons;;P_{#mu};GeV/c",
       multiply_Pmu, selection_reco, kSidebandRecoBin);
 
-      vect_sideband.emplace_back(b2d_Mulitply_pmu_reco);
+      //vect_sideband.emplace_back(b2d_Mulitply_pmu_reco);
 
      
     //vect_sideband.emplace_back(b2d_Mulitply_pmu_reco);
@@ -227,13 +317,74 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
       "Nprotons;;trkLen;cm",
       multiply_trklen, selection_reco, kSidebandRecoBin);
  
-     vect_sideband.emplace_back(b2d_Mulitply_trklen_reco);
- 
+    // vect_sideband.emplace_back(b2d_Mulitply_trklen_reco);
 
 
 
+        std::map< double, std::vector<double> > multiply_Sides_Pmu = {
+  {-0.5,Pmu_2d},   
+  {0.5, Pmu_2d},   
+  {1.5, Pmu_2d},
+  {2.5, Pmu_2d},
+  {3.5, Pmu_2d},
+  {4.5, Pmu_2d},
+  {5.5, Pmu_2d},
+  {6.5, {} }
+  }; 
+    
+  branchexpr_reco_scheme1 = "sel_PanelClosesttoEndMuonTrk;;p3mu_mcs.Mag();GeV/c";
+
+        Block2D *b2d_Mulitply_ClosestSide_Pmu_reco = new Block2D(branchexpr_reco_scheme1,
+      "ClosestSide;;P_{mu};GeV", 
+      "ClosestSide;;P_{mu};GeV",
+       multiply_Sides_Pmu, selection_reco, kSidebandRecoBin);  
+    
+    vect_sideband.emplace_back(b2d_Mulitply_ClosestSide_Pmu_reco);
+    
+            std::map< double, std::vector<double> > multiply_Sides_costheta = {
+  {-0.5, costheta},   
+  {0.5, costheta}, 
+  {1.5, costheta},
+  {2.5, costheta},
+  {3.5, costheta},
+  {4.5, costheta},
+  {5.5, costheta},
+  {6.5, {} }
+  }; 
+
+
+  branchexpr_reco_scheme1 = "sel_PanelClosesttoEndMuonTrk;;p3mu_mcs.CosTheta();";
+
+        Block2D *b2d_Mulitply_ClosestSide_costheta_reco = new Block2D(branchexpr_reco_scheme1,
+      "ClosestSide;;P_{mu};GeV", 
+      "ClosestSide;;P_{mu};GeV",
+      multiply_Sides_costheta, selection_reco, kSidebandRecoBin);  
+       
+    //  vect_sideband.emplace_back(b2d_Mulitply_ClosestSide_costheta_reco);
+    
+            std::map< double, std::vector<double> > multiply_Sides_trackLenght = {
+ {-0.5, trk_len_v_edges},   
+  {0.5, trk_len_v_edges}, 
+  {1.5,  trk_len_v_edges},
+  {2.5,  trk_len_v_edges},
+  {3.5,  trk_len_v_edges},
+  {4.5,  trk_len_v_edges},
+  {5.5,  trk_len_v_edges},
+  {6.5, {} }
+  }; 
+    
+      branchexpr_reco_scheme1 = "sel_PanelClosesttoEndMuonTrk;;trk_len_v[ muon_candidate_idx ];cm";
+
+        Block2D *b2d_Mulitply_trklenSides_reco = new Block2D(branchexpr_reco_scheme1,
+      "ClosestSide;;TkLen_{mu};cm", 
+      "ClosestSide;;TkLen_{mu};cm",
+       multiply_Sides_trackLenght, selection_reco, kSidebandRecoBin);  
+    
+      //  vect_sideband.emplace_back(b2d_Mulitply_trklenSides_reco);
+    
+    
 /*
-    branchexpr_reco_scheme1 = "trk_len_v[ muon_candidate_idx ];cm;p3_mu.Mag();";
+    branchexpr_reco_scheme1 = "trk_len_v[ muon_candidate_idx ];cm;p3mu_mcs.Mag();";
        std::map< double, std::vector<double> >trackLength_BIN_EDGES_Pmu = {
   {0,Pmu_2d},
   {10,Pmu_2d},
@@ -264,7 +415,8 @@ vect_block.emplace_back(b2d_trackLength_BIN_EDGES_Pmu, b2d_trackLength_BIN_EDGES
 
   // CATEGORY is the branchexpr
   // background_index is vector of background categories.
-  CATEGORY = "category";
+  //CATEGORY = "category";
+  CATEGORY = "JOINTCC0pi_EventCategory";
   background_index = {0, 5, 7, 8, 9, 10, 11};
 
 
@@ -310,7 +462,7 @@ vect_block.emplace_back(b2d_trackLength_BIN_EDGES_Pmu, b2d_trackLength_BIN_EDGES
   {2.5, costheta},
   {3.5, {} }
   }; 
-   branchexpr_reco_scheme1 = "sel_num_proton_candidates;p3_mu.CosTheta();";
+   branchexpr_reco_scheme1 = "sel_num_proton_candidates;p3mu_mcs.CosTheta();";
       Block2D *b2d_Mulitply_cos_reco = new Block2D(branchexpr_reco_scheme1,
       "Nprotons;;cos#theta;", 
       "Nprotons;;cos#theta;",

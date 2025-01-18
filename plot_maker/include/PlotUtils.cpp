@@ -1225,10 +1225,9 @@ void DrawStackMCandData_withBand(
   h_Data->SetLineColor( kBlack );
   h_Data->SetLineWidth( 3 );
   //:h_Data->SetMarkerStyle( kFullCircle );
-  h_Data->SetMarkerSize( 0.8 );
   
     h_Data->SetMarkerStyle(20);
-    h_Data->SetMarkerSize(.5);
+    h_Data->SetMarkerSize(.4);
     h_Data->SetMarkerColor(1);
     h_Data->SetLineWidth(1.0);
     h_Data->SetLineStyle(1.0);

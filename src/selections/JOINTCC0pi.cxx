@@ -2,6 +2,7 @@
 #include "XSecAnalyzer/FiducialVolume.hh"
 #include "XSecAnalyzer/Functions.hh"
 #include "XSecAnalyzer/TreeUtils.hh"
+//#include "XSecAnalyzer/MCSTools.hh"
 
 #include "XSecAnalyzer/Selections/JOINTCC0pi.hh"
 #include "XSecAnalyzer/Selections/EventCategoriesJOINTCC0pi.hh"
@@ -12,7 +13,7 @@
 // XGBoost model
 //BoosterHandle* booster;
 
-JOINTCC0pi::JOINTCC0pi() : SelectionBase("JOINTCC0pi") {
+JOINTCC0pi::JOINTCC0pi() : SelectionBase("JOINTCC0pi"), MCS_TOOL_(FV_X_MIN, FV_X_MAX ,FV_Y_MIN, FV_Y_MAX ,FV_Z_MIN, FV_Z_MAX) {
   //CalcType = kOpt1;
   booster = new BoosterHandle;
   XGBoosterCreate(NULL, 0, booster);
@@ -20,15 +21,15 @@ JOINTCC0pi::JOINTCC0pi() : SelectionBase("JOINTCC0pi") {
   std::cout<<"Got XGBoosterCreate  "<<std::endl;
   std::cout<<"Finished with Constuctor  "<<std::endl;
   xgb_pid_vec_.reset( new std::vector<int>() );
-  this->define_category_map();
-
+  this->define_category_map();  
 }
 ////////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////////
 void JOINTCC0pi::define_constants() {
-  this->define_true_FV(10.,246.,-105.,105.,10.,1026.);
-  this->define_reco_FV(10.,246.,-105.,105.,10.,1026.);
+
+  this->define_true_FV(FV_X_MIN,FV_X_MAX ,FV_Y_MIN,FV_Y_MAX,FV_Z_MIN,FV_Z_MAX);
+  this->define_reco_FV(FV_X_MIN,FV_X_MAX ,FV_Y_MIN,FV_Y_MAX,FV_Z_MIN,FV_Z_MAX); // old 10.,246.,-105.,105.,10.,1026.
   std::cout<<"Finished ::DefineConstants "<< std::endl;
 }
 ////////////////////////////////////////////////////////////////
@@ -55,8 +56,8 @@ void JOINTCC0pi::compute_reco_observables(AnalysisEvent* event){
     for ( int p = 0; p < event->num_pf_particles_; ++p ) {
 
       // Only include direct neutrino daughters (generation == 2)
-      unsigned int generation = event->pfp_generation_->at( p );
-      if ( generation != 2u ) continue;
+    unsigned int generation = event->pfp_generation_->at( p );
+    if ( generation != 2 ) continue;
 
       float trk_len = event->track_length_->at( p );
 
@@ -75,6 +76,7 @@ void JOINTCC0pi::compute_reco_observables(AnalysisEvent* event){
         }
       }
     }
+    
    if(verbosal > 0) std::cout<< "Finished  num_pf_particles_ loop "<< std::endl;
     // If we found at least two usable PFParticles, then assign the indices to
     // be used below
@@ -93,8 +95,8 @@ void JOINTCC0pi::compute_reco_observables(AnalysisEvent* event){
     if(verbosal > 0)  std::cout<< "Setting p3mu_mcs   "<< std::endl;
   auto& p3mu_mcs = *p3_mu_mcs_;
   auto& p3p = *p3_lead_p_;
-if(verbosal > 0)  std::cout<< "muon_candidate_idx_ =  "<< muon_candidate_idx_<< std::endl;
-if(verbosal > 0)  std::cout<< "lead_p_candidate_idx_ =  "<< lead_p_candidate_idx_<< std::endl;
+ if(verbosal > 0)  std::cout<< "muon_candidate_idx_ =  "<< muon_candidate_idx_<< std::endl;
+ if(verbosal > 0)  std::cout<< "lead_p_candidate_idx_ =  "<< lead_p_candidate_idx_<< std::endl;
   // Set the reco 3-momentum of the muon candidate if we found one
   bool muon = muon_candidate_idx_ != BOGUS_INDEX;
   if ( muon ) {
@@ -104,7 +106,7 @@ if(verbosal > 0)  std::cout<< "lead_p_candidate_idx_ =  "<< lead_p_candidate_idx
     float mu_diry = event->track_diry_->at( muon_candidate_idx_ );
     float mu_dirz = event->track_dirz_->at( muon_candidate_idx_ );
 
-if(verbosal > 0) std::cout<<"inside is muon:line 107"<< std::endl;
+ if(verbosal > 0) std::cout<<"inside is muon:line 107"<< std::endl;
 
     p3mu = TVector3( mu_dirx, mu_diry, mu_dirz );
     p3mu_mcs = TVector3( mu_dirx, mu_diry, mu_dirz );
@@ -131,8 +133,8 @@ if(verbosal > 0) std::cout<<"inside is muon:line 107"<< std::endl;
 
    if(verbosal > 0) std::cout<<"inside is muon:line 132"<< std::endl;
     muon_trkend_x_ = event->track_endx_->at(muon_candidate_idx_);
-    muon_trkend_y_ = event->track_endx_->at(muon_candidate_idx_);
-    muon_trkend_z_ = event->track_endx_->at(muon_candidate_idx_);
+    muon_trkend_y_ = event->track_endy_->at(muon_candidate_idx_);
+    muon_trkend_z_ = event->track_endz_->at(muon_candidate_idx_);
 
    if(verbosal > 0) std::cout<<"inside is muon:line 137"<< std::endl;
  
@@ -142,6 +144,24 @@ if(verbosal > 0) std::cout<<"inside is muon:line 107"<< std::endl;
     muon_trkchi2muon_ = event->track_chi2_muon_->at(muon_candidate_idx_);
 
   if( verbosal > 0 ) std::cout<< "Finished getting float muon_mom  float muon_muon_range loat muon_muon_mcs   "<< std::endl;
+
+    
+    PanelProjection_X_Z_ = MCS_TOOL_.PanelSingle_TB(muon_trkend_x_,muon_trkend_z_);
+    PanelProjection_Y_Z_ = MCS_TOOL_.PanelSingle_LR(muon_trkend_y_,muon_trkend_z_);
+    PanelProjection_X_Y_ = MCS_TOOL_.PanelSingle_FB(muon_trkend_x_,muon_trkend_y_);
+     
+     sel_PanelClosesttoEndMuonTrk_ =   MCS_TOOL_.ClosestSide(muon_trkend_x_, muon_trkend_y_, muon_trkend_z_);
+     sel_PanelClosestSubPaneltoEndMuonTrk_ =   MCS_TOOL_.returnSINGLEPanel_int(muon_trkend_x_, muon_trkend_y_, muon_trkend_z_);
+
+
+if( verbosal > 0 ) std::cout<<"(muon_trkend_x, muon_trkend_y, muon_trkend_z) =   (" << muon_trkend_x_<< " , "<< muon_trkend_y_<< " , " <<muon_trkend_z_ << " ) "<< std::endl;
+if( verbosal > 0 ) std::cout<<"Checking  sel_PanelClosesttoEndMuonTrk_ = " << sel_PanelClosesttoEndMuonTrk_ << std::endl;
+if( verbosal > 0 ) std::cout<<"Checking  sel_PanelClosestSubPaneltoEndMuonTrk_ = " << sel_PanelClosestSubPaneltoEndMuonTrk_ << std::endl;
+
+if( verbosal > 0 ) std::cout<<"Checking  PanelProjection_X_Z_ = " << PanelProjection_X_Z_ << std::endl;
+if( verbosal > 0 ) std::cout<<"Checking  PanelProjection_Y_Z_ = " << PanelProjection_Y_Z_ << std::endl;
+if( verbosal > 0 ) std::cout<<"Checking  PanelProjection_X_Y_ = " << PanelProjection_X_Y_ << std::endl;
+
 
 
 
@@ -156,7 +176,7 @@ if(verbosal > 0) std::cout<<"inside is muon:line 107"<< std::endl;
     if ( sel_muon_contained_ ) {
     // Unsure how to if I should apply it since not all root files have these branches
     if (event->track_length_->size() == 1 && event->trk_bragg_mu_fwd_preferred_v_->at(muon_candidate_idx_) == 0 && 6. < event->track_chi2_muon_->at(muon_candidate_idx_)){
-            std::cout<<"Rejecting flipped tracks"<<std::endl;
+            //std::cout<<"Rejecting flipped tracks"<<std::endl;
              muon_mom = LOW_FLOAT;
             }
     else{
@@ -208,6 +228,8 @@ if(verbosal > 0) std::cout<<"inside is muon:line 107"<< std::endl;
 
     p3p = TVector3( p_dirx, p_diry, p_dirz );
     p3p = p3p.Unit() * p_mom;
+    
+    
   }
 
   // Reset the vector of reconstructed proton candidate 3-momenta
@@ -303,25 +325,56 @@ void JOINTCC0pi::compute_true_observables(AnalysisEvent* event){
 
   // Set the true 3-momentum of the leading proton (if there is one)
   float max_mom = LOW_FLOAT;
+  float max_mom_Pion = LOW_FLOAT;
+  float mc_Eavail = 0.0;
+  
   for ( int p = 0; p < num_mc_daughters; ++p ) {
-    int pdg = event->mc_nu_daughter_pdg_->at( p );
-    if ( pdg == PROTON )
-    {
+  
+      int pdg = event->mc_nu_daughter_pdg_->at( p );
+      // ignore muon and neutrons
+      if(abs(pdg) == 13 || pdg == 2112) continue;
+     float energy = event->mc_nu_daughter_energy_->at( p );
+     
       float px = event->mc_nu_daughter_px_->at( p );
       float py = event->mc_nu_daughter_py_->at( p );
       float pz = event->mc_nu_daughter_pz_->at( p );
       TVector3 temp_p3 = TVector3( px, py, pz );
 
       mc_p3_p_vec_->push_back( temp_p3 );
-
       float mom = temp_p3.Mag();
+     
+     if(mom > energy ) continue; // // Ben saw some weirdness with GiBUU, so lets replicate his checks
+     
+    if ( pdg == PROTON )
+    {
+      
+       float KE_proton = real_sqrt( std::pow(energy, 2) - std::pow(PROTON_MASS, 2) );
+       if(KE_proton >= 0.035 )  mc_Eavail += KE_proton; // using inclusive thresholds for protons // 35 MeV threhold
+       if(verbosal > 0) std::cout<<"mc_Eavail = "<< mc_Eavail <<  " KE_proton  = "<< KE_proton<<std::endl;
       if ( mom > max_mom ) {
         max_mom = mom;
         *mc_p3_lead_p_ = temp_p3;
       }
     }
+    else if(abs(pdg) == PI_PLUS){
+     float KE_pion = real_sqrt( std::pow(energy, 2) - std::pow(PI_PLUS_MASS, 2) );
+     
+     if(KE_pion >= 0.01) mc_Eavail += KE_pion;  // using inclusive thresholds for pions  // 10 MeV threhold
+     if(verbosal > 0) std::cout<<"mc_Eavail = "<< mc_Eavail <<  " KE_pion;  = "<< KE_pion<<std::endl;
+      
+      if ( mom > max_mom_Pion ) {
+        max_mom_Pion = mom;
+        *mc_p3_lead_pi_ = temp_p3;
+      }  
+    }
+    else{
+         mc_Eavail +=energy;
+    } 
+    
   }
-
+         
+   mc_Eavail_= mc_Eavail;
+    if(verbosal > 0) std::cout<<"mc_Eavail_ = "<< mc_Eavail <<  " mc_Eavail = "<< mc_Eavail<<std::endl;
   // TODO: reduce code duplication by just getting the leading proton
   // 3-momentum from this sorted vector
   // Sort the true proton 3-momenta in order from highest to lowest magnitude
@@ -535,19 +588,23 @@ bool JOINTCC0pi::selection(AnalysisEvent* event){
   sel_num_proton_candidates_ = 0;
   sel_num_pion_candidates_ = 0;
   sel_num_pion_wc_candidates_ = 0;
+  float Eavail = 0.0;
+   if(verbosal > 0) std::cout<< "Eavail  = "<< Eavail<<std::endl;
 
   if(verbosal > 0)std::cout<< "Starting loop Line 520 "<<std::endl;
 
   for ( int p = 0; p < event->num_pf_particles_; ++p ) {
+      // Only make predictions for events passing the BDT pre-selection cuts
+      if (!sel_presel_) continue;
       if(verbosal > 0) std::cout<<"p  = "<< p<< std::endl;
 
      // Only worry about direct neutrino daughters (PFParticles considered
-     // daughters of the reconstructed neutrino)
-     unsigned int generation = event->pfp_generation_->at( p );
-
-     if(verbosal > 0)std::cout<<"generation  = "<< generation<< std::endl;
-     if ( generation != 2u ) continue;
-
+     // daughters of the reconstructed neutrino)     
+    float track_score =  event->pfp_track_score_->at( p );
+    unsigned int generation = event->pfp_generation_->at( p );
+    if ( generation != 2 || track_score <= TRACK_SCORE_CUT_jointcc0pi ) continue;
+     
+        
      // Check that we can find a muon candidate in the event. If more than
      // one is found, also fail the cut.
     if ( p == muon_candidate_idx_ ) {
@@ -581,7 +638,7 @@ bool JOINTCC0pi::selection(AnalysisEvent* event){
       if ( sel_muon_contained_ ){
 
            if (event->track_length_->size() == 1 && event->trk_bragg_mu_fwd_preferred_v_->at(muon_candidate_idx_) == 0 && 6. < event->track_chi2_muon_->at(muon_candidate_idx_)){
-            std::cout<<"Rejecting flipped tracks"<<std::endl;
+            //std::cout<<"Rejecting flipped tracks"<<std::endl;
             muon_mom = LOW_FLOAT;
            }
 
@@ -642,6 +699,11 @@ bool JOINTCC0pi::selection(AnalysisEvent* event){
       else {
         pi_mom = event->track_mcs_mom_mu_->at(p);
       }
+      
+      float output_Eavail = event->track_kinetic_energy_p_->at( p );
+      Eavail +=  output_Eavail;
+   
+     if(verbosal > 0) std::cout<<"output_Evvai(pion) l= "<< output_Eavail <<  " Eavail  = "<< Eavail<<std::endl;
 
       if (pi_mom > CHARGED_PI_MOM_CUT_jointcc0pi) {
         sel_num_pion_candidates_++;
@@ -668,16 +730,35 @@ bool JOINTCC0pi::selection(AnalysisEvent* event){
       float endz = event->track_endz_->at( p );
       bool end_contained = this->in_proton_containment_vol( endx, endy, endz );
       if ( !end_contained ) sel_protons_contained_ = false;
+      float output_Eavail = event->track_kinetic_energy_p_->at( p );
+      Eavail +=  output_Eavail;
+   
+     if(verbosal > 0) std::cout<<"output_Eavail(kP)=  "<< output_Eavail <<  " Eavail  = "<< Eavail<<std::endl;
+      
+      
     }
 
-    else if (xgb_pid_vec_->at(p) == (int) BDTClass::kOther) {}
+    else if (xgb_pid_vec_->at(p) == (int) BDTClass::kOther) {    
+     float track_length = event->track_length_->at( p );
+      if ( track_length <= 0. ) continue;
+      float output_Eavail = event->track_kinetic_energy_p_->at( p );
+      Eavail +=  output_Eavail;
+   
+     if(verbosal > 0) std::cout<<"output_Eavail (Other)= "<< output_Eavail <<  " Eavail  = "<< Eavail<<std::endl; 
+    }
     else if (xgb_pid_vec_->at(p) == (int) BDTClass::kInvalid) {}
     else {
       // hmm
     }
   }
   if(verbosal > 0) std::cout<< "Finished loop:line1945 "<<std::endl;
+        
 
+   
+    
+  Eavail_= Eavail;
+   if(verbosal > 0) std::cout<<"Eavail_ = "<< Eavail_ <<  " Eavail  = "<< Eavail<<std::endl;
+  
   sel_CC0pi_ = sel_nu_mu_cc_ && sel_no_reco_showers_
     && sel_muon_passed_mom_cuts_ && !sel_has_pion_candidate_
     && sel_n_bdt_other_ == 0 && sel_n_bdt_invalid_ == 0;
@@ -694,7 +775,8 @@ bool JOINTCC0pi::selection(AnalysisEvent* event){
     // All that remains is to apply the leading proton candidate cuts. We could
     // search for it above, but doing it here makes the code more readable (with
     // likely negligible impact on performance)
-    this->find_lead_p_candidate(event);
+    if(verbosal > 0) std::cout<<" find_lead_p_candidate  "<<std::endl;
+    if(sel_num_proton_candidates_>0) this->find_lead_p_candidate(event);
 
     // Check the range-based reco momentum for the leading proton candidate
     float lead_p_KE = event->track_kinetic_energy_p_->at( lead_p_candidate_idx_ );
@@ -787,6 +869,7 @@ void JOINTCC0pi::define_output_branches(){
   set_branch( &muon_candidate_idx_, "muon_candidate_idx" );
   set_branch( &lead_p_candidate_idx_, "lead_p_candidate_idx" );
 
+
   // Index for the leading proton candidate in the vectors of PFParticles
 
    set_branch( &distance_FV_surface_, "distance_FV_surface" );
@@ -802,13 +885,26 @@ void JOINTCC0pi::define_output_branches(){
    set_branch( &muon_trkstart_x_, "muon_trkstart_x" );
    set_branch( &muon_trkstart_y_, "muon_trkstart_y" );
    set_branch( &muon_trkstart_z_, "muon_trkstart_z" );
-   set_branch( &muon_trkchi2muon_, "muon_trkchi2muon" );
+   set_branch( &muon_trkchi2muon_, "muon_trkchi2muon");
+   set_branch( &muon_BDTScore_,    "muon_bdtscore");
+   set_branch( &lead_p_BDTScore_,  "lead_p_bdtscore");
+   set_branch( &Eavail_,       "Eavail" );
+   
+   
+  
 
-
+   set_branch( &PanelProjection_X_Z_, "PanelProjection_X_Z" );
+   set_branch( &PanelProjection_Y_Z_, "PanelProjection_Y_Z" );
+   set_branch( &PanelProjection_X_Y_, "PanelProjection_X_Y" );
+   set_branch( &sel_PanelClosesttoEndMuonTrk_, "sel_PanelClosesttoEndMuonTrk" );
+   set_branch( &sel_PanelClosestSubPaneltoEndMuonTrk_, "sel_PanelClosestSubPaneltoEndMuonTrk" );
 
   // Reco 3-momenta (muon, leading proton)
 
      set_branch( p3_mu_, "p3_mu" );
+     
+     set_branch( p3_mu_mcs_, "p3mu_mcs" );
+     set_branch( p3_mu_range_, "p3mu_range" );
      set_branch( p3_lead_p_, "p3_lead_p" );
      set_branch( p3_lead_pi_, "p3_lead_pi" );
 
@@ -824,7 +920,7 @@ void JOINTCC0pi::define_output_branches(){
   // True 3-momenta (muon, leading proton)
 
     set_branch( &mc_muontrklen_, "mc_muontrklen" );
-
+    set_branch( &mc_Eavail_,       "mc_Eavail" );
 
   // True 3-momenta (all protons, ordered from highest to lowest magnitude)
 
@@ -875,6 +971,9 @@ void JOINTCC0pi::define_category_map(){
   categ_map_ = JOINTCC0Pi_MAP;
   std::cout<<"Finished :: DefineCategoryMap "<< std::endl;
 }
+////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////////
@@ -969,6 +1068,7 @@ if(verbosal > 0) std::cout<<" inside ::classify_tracks  "<< std::endl;
              idx_max = k;
           }
        }
+       
       xgb_pid_vec_->at(p) = idx_max;
 
       switch ((BDTClass) idx_max) {
@@ -986,7 +1086,7 @@ if(verbosal > 0) std::cout<<" inside ::classify_tracks  "<< std::endl;
 ////////////////////////////////////////////////////////////////
 void JOINTCC0pi::find_muon_candidate(AnalysisEvent* event){
 
-if(verbosal > 0) std::cout<<" inside ::find_muon_candidate  "<< std::endl;
+  if(verbosal > 0) std::cout<<" inside ::find_muon_candidate  "<< std::endl;
   std::vector<int> muon_candidate_indices;
   std::vector<int> muon_pid_scores;
 
@@ -994,12 +1094,14 @@ if(verbosal > 0) std::cout<<" inside ::find_muon_candidate  "<< std::endl;
     for ( int p = 0; p < event->num_pf_particles_; ++p ) {
       // Only direct neutrino daughters (generation == 2) will be considered as
       // possible muon candidates
-      unsigned int generation = event->pfp_generation_->at( p );
-      if ( generation != 2u ) continue;
+    float track_score =  event->pfp_track_score_->at( p );
+    unsigned int generation = event->pfp_generation_->at( p );
+    if ( generation != 2 || track_score <= TRACK_SCORE_CUT_jointcc0pi ) continue;
 
       if (xgb_pid_vec_->at(p) == (int) BDTClass::kMu) {
         muon_candidate_indices.push_back( p );
         muon_pid_scores.push_back( xgb_score_vec_->at(p)[1] );
+        muon_BDTScore_ = xgb_score_vec_->at(p)[1];
       }
     }
   }
@@ -1009,6 +1111,7 @@ if(verbosal > 0) std::cout<<" inside ::find_muon_candidate  "<< std::endl;
 
   if ( num_candidates == 1u ) {
     muon_candidate_idx_ = muon_candidate_indices.front();
+    
   }
   else if ( num_candidates > 1u ) {
     // In the case of multiple muon candidates, choose the one with the highest
@@ -1020,41 +1123,56 @@ if(verbosal > 0) std::cout<<" inside ::find_muon_candidate  "<< std::endl;
       if ( highest_score < score ) {
         highest_score = score;
         chosen_index = muon_candidate_indices.at( c );
+        muon_BDTScore_ = score;
       }
     }
+    
     muon_candidate_idx_ = chosen_index;
   }
   else {
     muon_candidate_idx_ = BOGUS_INDEX;
   }
+
+
+
+
 }
 ////////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////////
 void JOINTCC0pi::find_lead_p_candidate(AnalysisEvent* event){
+  
+  // Only make predictions for events passing the BDT pre-selection cuts
+  if (!sel_presel_) return;
+  
   float lead_p_track_length = LOW_FLOAT;
   size_t lead_p_index = 0u;
+
+  
   for ( int p = 0; p < event->num_pf_particles_; ++p ) {
+    
 
     // Only check direct neutrino daughters (generation == 2)
+     // Skip PFParticles that are shower-like (track scores near 0)
+    float track_score =  event->pfp_track_score_->at( p );
     unsigned int generation = event->pfp_generation_->at( p );
-    if ( generation != 2u ) continue;
+    if ( generation != 2 || track_score <= TRACK_SCORE_CUT_jointcc0pi ) continue;
 
     // Skip the muon candidate reco track (this function assumes that it has
     // already been found)
     if ( p == muon_candidate_idx_ ) continue;
 
-    // Skip PFParticles that are shower-like (track scores near 0)
-    float track_score = event->pfp_track_score_->at( p );
-    if ( track_score <= TRACK_SCORE_CUT_jointcc0pi ) continue;
 
     // All non-muon-candidate reco tracks are considered proton candidates
     float track_length = event->track_length_->at( p );
     if ( track_length <= 0. ) continue;
-
-    if ( track_length > lead_p_track_length ) {
+    if(xgb_score_vec_->at(p).size()==0)continue; // if size zero no perdiction for this particle , skip then 
+         if(verbosal > 0) std::cout<< "  xgb_score_vec_->at(p).size() = "<< xgb_score_vec_->at(p).size() << std::endl;
+     if(verbosal > 0) std::cout<<" p =  "<< p <<  " xgb_score_vec_->at(p)[3] "<<xgb_score_vec_->at(p)[3] << std::endl;
+    if ( track_length > lead_p_track_length  && xgb_score_vec_->at(p).size() >3 ) {
       lead_p_track_length = track_length;
       lead_p_index = p;
+       lead_p_BDTScore_ = xgb_score_vec_->at(p)[3];
     }
   }
 
@@ -1158,7 +1276,7 @@ void JOINTCC0pi::apply_numu_CC_selection(AnalysisEvent* event)
 
     // Only check direct neutrino daughters (generation == 2)
     unsigned int generation = event->pfp_generation_->at( p );
-    if ( generation != 2u ) continue;
+    if ( generation != 2) continue;
 
     // Use the track reconstruction results to get the start point for
     // every PFParticle for the purpose of verifying containment. We could
@@ -1302,6 +1420,7 @@ void JOINTCC0pi::reset() {
   lead_p_candidate_idx_ = BOGUS_INDEX;
 
   distance_FV_surface_ = BOGUS;
+  lead_p_BDTScore_ = BOGUS; 
   muontrklen_ = BOGUS;
   muondistancetovectex_ = BOGUS;
   muon_llr_pid_score_ = BOGUS;
@@ -1315,11 +1434,23 @@ void JOINTCC0pi::reset() {
   muon_trkstart_y_ = BOGUS;
   muon_trkstart_z_ = BOGUS;
   muon_trkchi2muon_ = BOGUS;
+  muon_BDTScore_    = BOGUS;
+  Eavail_ = BOGUS;
+  
+  PanelProjection_X_Z_ = BOGUS_INDEX;
+  PanelProjection_Y_Z_ = BOGUS_INDEX;
+  PanelProjection_X_Y_ = BOGUS_INDEX;
+  
+  sel_PanelClosesttoEndMuonTrk_ = BOGUS;
+  sel_PanelClosestSubPaneltoEndMuonTrk_ = BOGUS;
 
   *p3_mu_ = TVector3();
   *p3_lead_p_ = TVector3();
   *p3_lead_pi_ = TVector3();
 
+  *p3_mu_mcs_= TVector3();
+  *p3_mu_range_= TVector3();
+  
   p3_p_vec_ ->clear();
   *mc_p3_mu_ = TVector3();
 
@@ -1328,7 +1459,6 @@ void JOINTCC0pi::reset() {
   mc_p3_p_vec_->clear();
 
   mc_muontrklen_ = BOGUS;
-
   xgb_pid_vec_->clear();
   xgb_score_vec_->clear();
 
@@ -1344,6 +1474,7 @@ void JOINTCC0pi::reset() {
   theta_mu_p_ = BOGUS;
 
   // MC STVs (only filled for signal events)
+  mc_Eavail_ = BOGUS;
   mc_delta_pT_ = BOGUS;
   mc_delta_phiT_ = BOGUS;
   mc_delta_alphaT_ = BOGUS;

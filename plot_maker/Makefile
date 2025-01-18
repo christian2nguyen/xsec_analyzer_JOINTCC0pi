@@ -38,7 +38,7 @@ stv_root_dict.o:
 	
 
 tutorial_slice_plots_test: tutorial_slice_plots_test.C 
-	$(CXX) $(CXXFLAGS) $(ROOTFLAGS) $(CC0PI_ANALYZER_FLAGS) $(LDFLAGS) -O3 -o $@ $^ include/*.o
+	$(CXX) $(CXXFLAGS) $(ROOTFLAGS) $(CC0PI_ANALYZER_FLAGS) $(LDFLAGS) -O3 -g -o $@ $^ include/*.o
 
 .PHONY: clean
 

@@ -190,6 +190,8 @@ class FilePropertiesManager {
       // analysis ntuple file properties
       ntuple_file_map_.clear();
       data_norm_map_.clear();
+      
+      std::cout<<"Making : data_norm_map "<< std::endl;
 
       const char* path = std::getenv( "XSEC_ANALYZER_DIR" );
       if ( path == nullptr ) throw std::runtime_error( "The environment"
@@ -202,7 +204,7 @@ class FilePropertiesManager {
       std::string in_file_name( input_table_file_name );
       if ( in_file_name.empty() ) {
         in_file_name = analysis_path_ + "/configs/file_properties.txt";
-	std::cout << "Provided FPM_CONFIG name is empty. Using default: "
+	       std::cout << "Provided FPM_CONFIG name is empty. Using default: "
           << in_file_name << '\n';
       }
 
@@ -263,6 +265,7 @@ class FilePropertiesManager {
 
           // Store this information in the normalization map
           data_norm_map_[ file_name ] = TriggersAndPOT( trigs, pot );
+          std::cout<< "Run "<< run << " POT = "<< pot << " Trigs = "<< trigs << std::endl;
         }
       }
     }

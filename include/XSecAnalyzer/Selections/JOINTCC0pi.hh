@@ -3,7 +3,7 @@
 
 
 #include "XSecAnalyzer/Selections/SelectionBase.hh"
-
+#include "XSecAnalyzer/MCSTools.hh"
 // XGBoost
 #include <xgboost/c_api.h>
 
@@ -58,6 +58,7 @@ class JOINTCC0pi : public SelectionBase {
   /////////////
   //BDT Model//
   BoosterHandle* booster;
+  MCSTools MCS_TOOL_;
 
   virtual int categorize_event( AnalysisEvent* event ) override final;
   virtual bool selection( AnalysisEvent* event ) override final;
@@ -106,6 +107,28 @@ class JOINTCC0pi : public SelectionBase {
     const float TOPO_SCORE_CUT_jointcc0pi =  .15;
     const float COSMIC_IP_CUT_jointcc0pi = 25.; // cm
     const float TRACK_SCORE_CUT_jointcc0pi  = .5;
+    
+    
+    const double PCV_X_MIN =   10.;
+    const double PCV_X_MAX =  246.35;
+
+    const double PCV_Y_MIN = -106.5;
+    const double PCV_Y_MAX =  106.5;
+
+    const double PCV_Z_MIN =   10.;
+    const double PCV_Z_MAX = 1026.8;
+    
+    const double FV_X_MIN =   21.5;
+    const double FV_X_MAX =  234.85;
+
+    const double FV_Y_MIN = -95.0;
+    const double FV_Y_MAX =  95.0;
+
+    const double FV_Z_MIN =   21.5;
+    const double FV_Z_MAX =  966.8;
+    
+    
+    
 // REMOVE ME
 //constexpr float MUON_TRACK_SCORE_CUT .8;
 //constexpr float MUON_VTX_DISTANCE_CUT = 4.; // cm
@@ -227,7 +250,7 @@ class JOINTCC0pi : public SelectionBase {
 
     // ** Reconstructed observables **
 
-    // 3-momenta
+      // 3-momenta
     MyPointer< TVector3 > p3_mu_;
     MyPointer< TVector3 > p3_mu_range_;
     MyPointer< TVector3 > p3_mu_mcs_;
@@ -269,9 +292,17 @@ class JOINTCC0pi : public SelectionBase {
     float muon_trkend_z_;
     float muon_tkscore_; 
     float muon_trkchi2muon_;
+    float muon_BDTScore_;
+    float lead_p_BDTScore_;
+    float Eavail_;
     
+    int PanelProjection_X_Z_;
+    int PanelProjection_Y_Z_;
+    int PanelProjection_X_Y_;
     
-    
+    int sel_PanelClosesttoEndMuonTrk_;
+    int sel_PanelClosestSubPaneltoEndMuonTrk_;
+  
     
     // ** MC truth observables **
     // These are loaded for signal events whenever we have MC information
@@ -296,7 +327,7 @@ class JOINTCC0pi : public SelectionBase {
     float mc_theta_mu_p_ ;
     float mc_distance_FV_surface_ ;
     float mc_muontrklen_;
-
+    float mc_Eavail_;
   STVCalcType CalcType;
 
 

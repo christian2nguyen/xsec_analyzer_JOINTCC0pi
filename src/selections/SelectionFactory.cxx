@@ -31,6 +31,9 @@ SelectionBase* SelectionFactory::CreateSelection(
   else if ( selection_name == "JOINTCC0pi" ) {
     sel = new JOINTCC0pi;
   }
+    else if ( selection_name == "category" ) {
+    sel = new JOINTCC0pi;
+  }
   else if ( selection_name == "Dummy" ) {
     sel = new DummySelection;
   }

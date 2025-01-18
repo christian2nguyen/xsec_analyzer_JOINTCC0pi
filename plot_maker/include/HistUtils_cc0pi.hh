@@ -18,9 +18,9 @@
 #include "TLatex.h"
 #include "TLine.h"
 #include "TH2Poly.h"
-#include "UBTH2Poly.h" 
+//#include "UBTH2Poly.h" 
 #include "GridCanvas.hh"
- 
+ #include "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/include/XSecAnalyzer/UBTH2Poly.hh"
 //#include "ConfigMakerUtils.hh"
 #include "EventCategory.hh"
 #include "NamedCategory.hh"
@@ -533,7 +533,7 @@ return OutMap_result;
 
 }//////////////////////////////// End of Function 
 ////////////////////////////////////////////////////////////////////////////////
-std::vector<double> get_bin_low_edges( double xmin, double xmax, int Nbins );
+//std::vector<double> get_bin_low_edges( double xmin, double xmax, int Nbins );
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<double> generateBins();
 ////////////////////////////////////////////////////////////////////////////////

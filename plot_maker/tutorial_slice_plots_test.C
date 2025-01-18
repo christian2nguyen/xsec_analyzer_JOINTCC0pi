@@ -22,6 +22,7 @@
 #include "../include/XSecAnalyzer/MCC9SystematicsCalculator.hh"
 #include "../include/XSecAnalyzer/SliceBinning.hh"
 #include "../include/XSecAnalyzer/SliceHistogram.hh"
+#include "../include/XSecAnalyzer/UBTH2Poly.hh"
 #include "TLatex.h"
 #include "../include/XSecAnalyzer/ConfigMakerUtils.hh"
 #include "include/PlotUtils.hh"
@@ -98,18 +99,19 @@ char pdf_title[1024];
 char textplace[1024];
 std::string Pdf_name = "Measuring_Vars_1D_Figures_Systematics_Errors_CC0piNp";
 std::string Pdf_name_1D_NODATAPOINTS = "Measuring_Vars_1D_Figures_Systematics_Errors_NoDataPoints";
-std::string Pdf_name_withData = "Measuring_Vars_1D_Figures_Systematics_Errors_1D_Tracks_slices_Contained";
+std::string Pdf_name_withData = "Measuring_Vars_1D_Figures_Systematics_Errors_MCS_v1_contained";
 
 //auto BinVector = GetProjectBinVector();
 
 
-std::string Pdf_name2D = "Measuring_Vars_2D_Figures_Systematics_Errors_newTuples_new_sideband";
-std::string Pdf_name2_Data = "Measuring_Vars_2D_Figures_Systematics_Errors_Selection_11_1_24";
+std::string Pdf_name2D = "Measuring_Vars_2D_Figures_Systematics_Errors_newTuples_new_1";
+std::string Pdf_name2_Data = "Measuring_Vars_2D_Figures_Systematics_Errors_Selection_May10th_FULLdata_FULLData_Combined";
 std::string Pdf_name2D_inclusive = "Measuring_Vars_2D_inclusive_Figures_Systematics_Errors_newTuples_new_5_20_2024";
-std::string Pdf_name2D_inclusive_Data = "Measuring_Vars_2D_inclusive_Figures_Systematics_Errors_Selection_PC_mcs";
+std::string Pdf_name2D_inclusive_Data = "Measuring_Vars_2D_inclusive_Figures_Systematics_Errors_Selection_FULLDATA_Combined";
 //std::string Pdf_name2D_Closure = "Measuring_Vars_2D_inclusive_Figures_Systematics_Errors_GENIEClosure_v12";
 std::string MicroBooNE_LegendTitle();
 std::string MicroBooNE_LegendTitle_OpenData();
+std::string MicroBooNE_LegendTitle_FullData();
 void DrawFakeData_GENIE();
 void DrawFakeData_InProgess();
 bool TrueOffChisquare = false; 
@@ -190,7 +192,7 @@ void DrawStack(
   double &totalChi2,
   double &Totalpvalue,
   int &NDF,
-  double SliceBinWidth = 1.0);
+  double SliceBinWidth = 1.0, bool turnOffChi2=false);
   
   void DrawStack_noData(
   TH2D* category_hist_input,
@@ -208,7 +210,7 @@ void DrawStack(
   bool Plot_EXT );
   
   
-void tutorial_slice_plots_withData();
+void tutorial_slice_plots_withData(std::string PDFoutputName, std::string input_UnimakeFile, std::string File_property,  std::string input_Bin_config);
 void tutorial_slice_plots_NODATAPOINTS();
 void tutorial_slice_plots_2D();
 void tutorial_slice_plots_2D_withData();
@@ -1325,7 +1327,7 @@ void tutorial_slice_plots_NODATAPOINTS() {
 //////////////////////////////////////////////////////////////////////////////
 /// 
 //////////////////////////////////////////////////////////////////////////////
-void tutorial_slice_plots_withData() {
+void tutorial_slice_plots_withData(std::string PDFoutputName, std::string input_UnimakeFile, std::string File_property,  std::string input_Bin_config,bool turnOffChi2) {
 
    std::cout<<"Starting tutorial_slice_plots"<< std::endl;
   #ifdef USE_FAKE_DATA
@@ -1340,7 +1342,7 @@ void tutorial_slice_plots_withData() {
     std::cout<<" passed "<< std::endl;
   #endif
 
- fpm.load_file_properties( "/exp/uboone/app/users/liangliu/analysis-code/tutorial/xsec_analyzer_eaf/configs/file_properties_cthorpe_current.txt" );
+ fpm.load_file_properties( File_property);
  //fpm.load_file_properties( "file_properties_May10_OpenData.txt" );
  char axisXtitle[1024];
  /// Taking from my area
@@ -1352,9 +1354,11 @@ void tutorial_slice_plots_withData() {
  
   //UnivMake_FakeData_BDTdecided_1D_v5_pmucorrection.root
   auto* syst_ptr = new MCC9SystematicsCalculator(
-  "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/Liang_unimake/unimake_binningScheme1.root",
-  "../configs/systcalc_noNuWro_eventrates.conf"
+  //"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_12_5_2024/UnivMake_MCS_v1.root",
+  input_UnimakeFile,
+  "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/systcalc_noNuWro_eventrates_nodownly.conf"
   
+  //
   //"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/Anaylzer_unimakeoutputPanos/Unimake_Ntracks_v2.root"
     /*"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_8_16_2024/unimake_1D.root",
     "systcalc_noNuWro_eventrates.conf"*/ );
@@ -1384,14 +1388,16 @@ void tutorial_slice_plots_withData() {
     //reco_bnb_hist->Add( reco_ext_hist ); Just remove this 
   #endif
 
+  std::cout<<"Getting cv_universe().hist_categ_.get()"<< std::endl;
   TH2D* category_hist = syst.cv_universe().hist_categ_.get();
-
+  std::cout<<"Getting cv_universe().hist_categ_.get():: FINISHed"<< std::endl;
 
   // Total MC+EXT prediction in reco bin space. Start by getting EXT.
   TH1D* reco_mc_plus_ext_hist = dynamic_cast< TH1D* >(
     reco_ext_hist->Clone("reco_mc_plus_ext_hist") );
   reco_mc_plus_ext_hist->SetDirectory( nullptr );
-
+   
+   std::cout<<"Finished line 1397"<< std::endl;
 
  if(Plot_EXT == false){
    int nBins = reco_mc_plus_ext_hist->GetNbinsX();
@@ -1400,16 +1406,22 @@ void tutorial_slice_plots_withData() {
      }
  }
 
+ std::cout<<"Finished line 1407"<< std::endl;
   // Add in the CV MC prediction
   reco_mc_plus_ext_hist->Add( syst.cv_universe().hist_reco_.get() );
+   std::cout<<"finished line 1410"<< std::endl;
 
   // Keys are covariance matrix types, values are CovMatrix objects that
   // represent the corresponding matrices
+     std::cout<<"starting to get  get_covariances"<< std::endl;
   auto* matrix_map_ptr = syst.get_covariances().release();
   auto& matrix_map = *matrix_map_ptr;
-
+  
+       std::cout<<"Finished"<< std::endl;
+ std::cout<<"Getting Slices"<< std::endl;
   //auto* sb_ptr = new SliceBinning( "mybins_Muon_1D_Pmu_v3_slice_config.txt" ); //tutorial_reco_slice_config.txt //mybins_mcc8_1D_Topological_Score.txt mybins_mcc8_1D_TrackScore.txt  mybins_mcc8_1D.txt /mybins_mcc8_1D_NTracks.txt mybins_all.txt
-  auto* sb_ptr = new SliceBinning( "../configs/mybins_mcc9_2D_muon_v1_july3_2024.txt" );
+  auto* sb_ptr = new SliceBinning(input_Bin_config );
+  //JOINTCC0pi_Scheme1_v4slice_config.txt Muon_MCSslice_config.txt JOINTCC0pi_Scheme1_v4slice_config.txt
   auto& sb = *sb_ptr;
   ////////////////////////////////
   // Starting to plot
@@ -1418,7 +1430,7 @@ void tutorial_slice_plots_withData() {
   std::cout<< " Number of Slices to Plot : "<< sb.slices_.size() << std::endl;
 
   TCanvas *c1 = new TCanvas("c1");
-  sprintf(pdf_title, "%s.pdf(", Pdf_name_withData.c_str());
+  sprintf(pdf_title, "%s.pdf(", PDFoutputName.c_str());
   c1 -> Print(pdf_title);
  /*
    std::vector<std::string> xaxistitles_vector{
@@ -1489,7 +1501,7 @@ void tutorial_slice_plots_withData() {
     // one-based to match the ROOT histograms
     int cat_bin_index = cat_map.size();
 
-    lg1_stacked->AddEntry(slice_bnb->hist_.get(), "Open Data", "pe" );
+    lg1_stacked->AddEntry(slice_bnb->hist_.get(), "Data", "pe" );
     lg1_stacked->AddEntry(slice_mc_plus_ext->hist_.get(), "Total MC", "le" );
 
    //  std::cout<<"stack Loop removed r crbegin() crend() "<< std::endl;
@@ -1549,7 +1561,7 @@ void tutorial_slice_plots_withData() {
 
       //sprintf(textplace, "p-value = %.4f",chi2_result.p_value_ );
       //text->DrawLatex(0.15, 0.80, textplace);
-      sprintf(pdf_title, "%s.pdf",  Pdf_name_withData.c_str());
+      sprintf(pdf_title, "%s.pdf",  PDFoutputName.c_str());
       c1 -> Print(pdf_title);
     //  std::cout<<"FINISHED printing chi values "<< std::endl;
 
@@ -1582,7 +1594,7 @@ void tutorial_slice_plots_withData() {
        slice_ext,
        slice_mc_plus_ext,
       slice,
-       Pdf_name_withData,
+       PDFoutputName,
       "Test",
       axisXtitle,
       c1,
@@ -1590,7 +1602,7 @@ void tutorial_slice_plots_withData() {
       Plot_EXT ,
       chi1,
       pvalue,
-      NDF);
+      NDF,turnOffChi2);
     
 
 
@@ -1819,7 +1831,7 @@ void tutorial_slice_plots_withData() {
 
     std::cout << "Total frac error in bin #1 = "
       << total_frac_err_hist->GetBinContent( 1 )*100. << "%\n";
-      //sprintf(pdf_title, "%s.pdf",  Pdf_name_withData.c_str());
+      //sprintf(pdf_title, "%s.pdf",  PDFoutputName.c_str());
       c1 -> Print(pdf_title);
 
  DrawFractionalError(
@@ -1879,7 +1891,7 @@ void tutorial_slice_plots_withData() {
   //////////////////////////////////
 
 
-  sprintf(pdf_title, "%s.pdf)",  Pdf_name_withData.c_str());
+  sprintf(pdf_title, "%s.pdf)",  PDFoutputName.c_str());
   c1 -> Print(pdf_title);
 
 
@@ -2045,12 +2057,13 @@ void DrawStack_WithRatio(
   double &totalChi2,
   double &Totalpvalue,
   int &NDF,
-  double SliceBinWidth)
+  double SliceBinWidth, bool turnOffChi2)
 {
     bool makeNormWidth = true;
   const auto& EventInterp = EventCategoryInterpreter::Instance();
   TLegend* lg1_stacked = new TLegend(0.28, 0.38, 0.92, 0.89 );
-  std::string MicroBooneTitle = MicroBooNE_LegendTitle_OpenData();
+  //std::string MicroBooneTitle = MicroBooNE_LegendTitle_OpenData();
+  std::string MicroBooneTitle = MicroBooNE_LegendTitle_FullData();
 	lg1_stacked->SetHeader(MicroBooneTitle.c_str());
   lg1_stacked->SetNColumns(3);
   lg1_stacked->SetBorderSize(0);
@@ -2072,7 +2085,7 @@ void DrawStack_WithRatio(
   TH1D* h_Data_RATIO2 =(TH1D*)slice_bnb->hist_.get()->Clone(uniq());
   
   if(Plot_EXT==false) lg1_stacked->AddEntry(h_Data, "Fake Data [Stat]", "pe" );
-  else if(Plot_EXT==true) lg1_stacked->AddEntry(h_Data, "Open Data [Stat]", "pe" );
+  else if(Plot_EXT==true) lg1_stacked->AddEntry(h_Data, "Data [Stat]", "pe" );
     
     
   TH1D* h_Total_MC =(TH1D*)slice_mc_plus_ext->hist_.get()->Clone(uniq());
@@ -2152,14 +2165,14 @@ void DrawStack_WithRatio(
     h_Data, 
     h_Total_MC,
     slice_pred_stack,
-    "NEvents  / Bin Width",
+    "NEvents(10^{4})  / Bin Width",
    "",  
     makeNormWidth, 
     "title",
     99,
     c1,
     SliceBinWidth,
-    1);
+    .0001);
 
   if(Plot_EXT==false) DrawFakeData_GENIE(); //DrawFakeData();
     
@@ -2182,7 +2195,7 @@ void DrawStack_WithRatio(
     text->SetTextSize(0.04);
     text->SetTextColor(kRed);
     
-    if(!TrueOffChisquare==true){
+    if(turnOffChi2==true){
     auto chi2_result = slice_bnb->get_chi2( *slice_mc_plus_ext );
     sprintf(textplace, "#chi^{2}/ndf = %.2f / %i",chi2_result.chi2_ , chi2_result.num_bins_ );
     text->DrawLatex(0.1, 0.75, textplace);
@@ -2447,7 +2460,7 @@ void DrawStack(
 
 
    h_Data->SetTitle("");
-std::cout<<"SliceBinWidth = "<< SliceBinWidth << std::endl;
+   std::cout<<"SliceBinWidth = "<< SliceBinWidth << std::endl;
   ///////////////////////
   // Zoom in on figure 
   /////////////////////
@@ -2476,7 +2489,8 @@ if(Scaleall){
    h_extBNB->Scale(WindowZoomscale);
    scaleTHStack(slice_pred_stack, WindowZoomscale);
             
-  h_Data->GetYaxis()->SetNdivisions(503);
+  h_Total_MC->GetYaxis()->SetNdivisions(504);
+  h_Data->GetYaxis()->SetNdivisions(504);
   h_Data->GetXaxis()->SetNdivisions(505);
        
        
@@ -4892,8 +4906,18 @@ std::cout<<" Testing Slice Plots "<< std::endl;
 
  // tutorial_slice_plots();
   //tutorial_slice_plots_NODATAPOINTS();
-  //tutorial_slice_plots_withData();
-  tutorial_slice_plots_2D_withData();
+  //std::string inputmakeFile = "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_12_21_2024/unimake_scheme1_v7.root" ;
+  //std::string Plotting_Property_file = "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/file_properties_EventSelection_12_21_2024_Plotting.txt";
+  //std::string Bining_configFIle = "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/JOINTCC0pi_Scheme1_v7slice_config.txt";
+  //tutorial_slice_plots_withData("SelectionPlots_scheme1_test", inputmakeFile, Plotting_Property_file,Bining_configFIle,true);
+  //tutorial_slice_plots_2D_withData();
+  
+  std::string inputmakeFile = "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_12_21_2024/unimake_Panelbinning.root" ;
+  std::string Plotting_Property_file = "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/file_properties_EventSelection_12_21_2024_Plotting.txt";
+  std::string Bining_configFIle = "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/Muon_MCS_Panelsslice_config.txt";
+
+  tutorial_slice_plots_withData("SelectionPlots_Panel_test", inputmakeFile, Plotting_Property_file,Bining_configFIle,true);
+  
   //tutorial_slice_plots_2D_inclusive_withData();
   //tutorial_slice_plots_2D();
   //tutorial_slice_plots_2D_inclusive();
@@ -4920,8 +4944,15 @@ return get_legend_title( 4.54e19 );
 
 
 std::string MicroBooNE_LegendTitle_OpenData(){
-return get_legend_title( 1.42E+20 );
+return get_legend_title( 9.598e+20 ); /*1.42E+20*/
 }// End of Funtion
+
+std::string MicroBooNE_LegendTitle_FullData(){
+return get_legend_title( 1.1078e+21 );
+}// End of Funtion
+
+
+
 
 void DrawFractionalError(
 CovMatrixMap &matrix_map,
@@ -5284,7 +5315,10 @@ void tutorial_slice_plots_2D_withData()
     std::cout<<" passed "<< std::endl;
   #endif
   
- fpm.load_file_properties( "../configs/file_properties_May10_OpenData_new.txt" );
+ //fpm.load_file_properties( "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/file_properties_May10_OpenData_new.txt" );
+ std::cout<<"finished"<< std::endl;
+ //fpm.load_file_properties( "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/file_properties_May10_FUllData_Plotting.txt" );
+ fpm.load_file_properties( "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/file_properties_EventSelection_12_5_plotting.txt" );
  //
  char axisXtitle[1024];
  /// Taking from my area
@@ -5294,9 +5328,16 @@ auto binwidthMap = Projection9Bins_width(MUON_2D_BIN_EDGES);
 
 //UnivMake_OPEN_Data_2D_binningscheme1_CC0piNp.root
 
+ // auto* syst_ptr = new MCC9SystematicsCalculator(
+ //   "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_11_6_2024/Unimake_scheme1.root",
+ //   "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/systcalc_noNuWro_eventrates.conf" );
+ 
   auto* syst_ptr = new MCC9SystematicsCalculator(
-    "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_11_1_2024/Unimake_2D_scheme_1.root",
-    "../config/systcalc_noNuWro_eventrates.conf" );
+    "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_12_5_2024/Unimake_Scheme2_v1.root",
+    "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/systcalc_noNuWro_eventrates.conf" );
+ 
+ 
+ 
   auto& syst = *syst_ptr;
   ///exp/uboone/data/users/cnguyen/CC0Pi_Selection/Anaylzer_unimakeoutputPanos/Unimake_BinningScheme1_v1.root
   //nimake_scheme1_MCS_pmu_FC_OPEN.root
@@ -5345,6 +5386,7 @@ char LegendMasterTitle[1024];
 
 
   TH2D* category_hist = syst.cv_universe().hist_categ_.get();
+std::cout<<"Got Category"<< std::endl;
 
   // Total MC+EXT prediction in reco bin space. Start by getting EXT.
   TH1D* reco_mc_plus_ext_hist = dynamic_cast< TH1D* >(
@@ -5363,9 +5405,19 @@ char LegendMasterTitle[1024];
   //auto& matrix_map = *matrix_map_ptr;
 
    CovMatrixMap &matrix_map = *matrix_map_ptr;
+std::cout<<"starting loop"<< std::endl;
+
+ //for (auto it = matrix_map.begin(); it != matrix_map.end(); ++it) {
+ //       std::cout<< "name : "  << it->first << std::endl;
+ //   }
 
 
-  auto* sb_ptr = new SliceBinning( "../config/mybins_mcc9_2D_muon_v1_july3_2024.txt" ); //tutorial_reco_slice_config.txt
+
+  auto* sb_ptr = new SliceBinning( "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/JOINTCC0pi_Scheme1_v4slice_config.txt" ); //tutorial_reco_slice_config.txt
+  //auto* sb_ptr = new SliceBinning( "/exp/uboone/app/users/liangliu/analysis-code/tutorial/xsec_analyzer_eaf/configs/JOINTCC0pi_slice_config.txt"); //tutorial_reco_slice_config.txt
+  //mybins_mcc9_2D_muon_v1_july3_2024.txt
+  
+  ///exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/JOINTCC0pi_slice_config.txt
   auto& sb = *sb_ptr;
   ////////////////////////////////
   // Starting to plotte
@@ -5380,7 +5432,7 @@ char LegendMasterTitle[1024];
   //std::vector<std::string> xaxistitles_vector{"Cos#theta_{#mu}","p_{#mu} [GeV/c]", "Bin N" };
    int BinNSlice = 9; 
 	TLegend *legendMaster = new TLegend(0.05, 0.05, 0.98, 0.98);
-	  std::string MicroBooneTitle = MicroBooNE_LegendTitle_OpenData();
+	  std::string MicroBooneTitle = MicroBooNE_LegendTitle_FullData();
 	legendMaster->SetNColumns(2);
 	legendMaster->SetBorderSize(0);
 	
@@ -5411,14 +5463,18 @@ std::string FullChi_sqted;
     //if(sl_idx>10)continue;
     // We now have all of the reco bin space histograms that we need as input.
     // Use them to make new histograms in slice space.
+        std::cout<<"geting  slices:BNBstats"<< std::endl;
+    
     SliceHistogram* slice_bnb = SliceHistogram::make_slice_histogram(
       *reco_bnb_hist, slice, &matrix_map.at("BNBstats") );
-
+     std::cout<<"geting  slices:EXTstats"<< std::endl;
     SliceHistogram* slice_ext = SliceHistogram::make_slice_histogram(
       *reco_ext_hist, slice, &matrix_map.at("EXTstats") );
-
+     std::cout<<"geting  slices:total"<< std::endl;
     SliceHistogram* slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
       *reco_mc_plus_ext_hist, slice, &matrix_map.at("total") );
+     
+    std::cout<<"got slices"<< std::endl;
      
 
     if(BinNSlice==sl_idx){
@@ -5443,17 +5499,17 @@ std::string FullChi_sqted;
     // one-based to match the ROOT histograms
     int cat_bin_index = cat_map.size();
 
-    lg1_stacked->AddEntry(slice_bnb->hist_.get(), "Open Data [Stat]", "pe" );
+    lg1_stacked->AddEntry(slice_bnb->hist_.get(), "Data [Stat]", "pe" );
     lg1_stacked->AddEntry(slice_mc_plus_ext->hist_.get(), "#muBooNE Tune [Sys+Stat]", "le" );
 
     if(BinNSlice==sl_idx){
-         legendMaster->AddEntry(slice_bnb->hist_.get(), "Open Data [Stat]", "pe" );
+         legendMaster->AddEntry(slice_bnb->hist_.get(), "Data [Stat]", "pe" );
          legendMaster->AddEntry(slice_mc_plus_ext->hist_.get(), "#muBooNE Tune [Sys+Stat]", "le" );
          
          TH1D* clonebnb = (TH1D*)slice_bnb->hist_.get()->Clone(uniq());
          TH1D* cloneext = (TH1D*)slice_mc_plus_ext->hist_.get()->Clone(uniq());
          
-         lg1_Grid->AddEntry(clonebnb, "Open Data [Stat]", "pe" );
+         lg1_Grid->AddEntry(clonebnb, "Data [Stat]", "pe" );
          lg1_Grid->AddEntry(cloneext, "#muBooNE Tune [Sys+Stat]", "le" );
     }
 
@@ -5493,7 +5549,7 @@ std::string FullChi_sqted;
 
    lg1_stacked->AddEntry(slice_ext->hist_.get(),"EXT BNB" , "f" );
 
-  if(BinNSlice==sl_idx){
+    if(BinNSlice==sl_idx){
     double amount = slice_ext->hist_.get()->Integral();
      double input = ( amount/ Totalamount ) * 100.0 ; 
      sprintf(LegendMasterTitle, "EXT BNB (%2.1f%)", input );
@@ -5768,13 +5824,13 @@ std::string FullChi_sqted;
  /// Making Grid Figure here 
  ///////////////////////////////////////////////////
 // std::vector<double> WindowZoomScale{2,1,1,1,1,1,2,10,25}; contained
- std::vector<double> WindowZoomScale{2,1,1,1,1,1,2,15,50};
+ std::vector<double> WindowZoomScale{2,1,1,1,1,1,1,10,40};
 
  double min_XAxis_GridCanvas = -1.0;
  double max_XAxis_GridCanvas = 1.0;
  
  double min_YAxis_GridCanvas = 0.0;
- double max_YAxis_GridCanvas = 23.5;
+ double max_YAxis_GridCanvas = 7.5;
  
  GridCanvas *GC_Stack = new GridCanvas(uniq(), 3, 4, 800, 550);
  GridCanvas *Stack_FracError = new GridCanvas(uniq(), 3, 4, 800, 550);
@@ -5835,7 +5891,7 @@ std::string FullChi_sqted;
     int cat_bin_index = cat_map.size();
       
       if(sl_idx==0){
-          //lg1_Grid->AddEntry(slice_bnb->hist_.get(), "Open Data", "pe" );
+          //lg1_Grid->AddEntry(slice_bnb->hist_.get(), "Data", "pe" );
           auto histclone = (TH1D*)slice_mc_plus_ext->hist_.get()->Clone(uniq());
           
            histclone->SetFillColorAlpha(kRed, 0.8);
@@ -5919,7 +5975,7 @@ std::string FullChi_sqted;
     double SliceBinWidth = 1.0;
     if(sl_idx < 10) SliceBinWidth = binwidthMap[BinVector.at(sl_idx)];
      bool DoScaledown= true;
-      double Scaledown = .001;
+      double Scaledown = .0001;
     GC_Stack->cd(GridBins); 
     
      DrawStack(
@@ -5977,7 +6033,7 @@ std::string FullChi_sqted;
 	GC_Stack->SetXTitle("cos#theta_{#mu}");
 	GC_Stack->SetYTitleSize(22);
 	GC_Stack->SetXTitleSize(20);  
-	GC_Stack->SetYTitle("NEvents (#times 10^{3}) / [BinWidth]");
+	GC_Stack->SetYTitle("NEvents (#times 10^{4}) / [BinWidth]");
 	GC_Stack->SetTitleAlignmentFor6Hist();
 	GC_Stack->SetYTitle_offset(.1);
   //leg->Draw("SAME");]
@@ -6194,11 +6250,11 @@ void tutorial_slice_plots_2D_inclusive_withData() {
     
     std::cout<<"Finished:FilePropertiesManager::Instance() "<<std::endl; 
     std::cout<<"trying to apply load_file_properties"<< std::endl;
-    fpm.load_file_properties( "file_properties.txt" );
+   // fpm.load_file_properties( "file_properties.txt" );
     std::cout<<" passed "<< std::endl;
   #endif
 
- fpm.load_file_properties( "file_properties_May10_OpenData.txt" );
+ fpm.load_file_properties( "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/file_properties_May10_OpenData_Panos_FUllData_Combined_Plotting.txt" );
  
  //
  
@@ -6210,8 +6266,8 @@ void tutorial_slice_plots_2D_inclusive_withData() {
  std::cout<<"Created syst_ptr a  MCC9SystematicsCalculator"<< std::endl;
 
   auto* syst_ptr = new MCC9SystematicsCalculator(
-  "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_8_16_2024/unimak_Scheme2_MCS_pmu_PC_Open.root"
-    , "systcalc_noNuWro_eventrates.conf" );
+  "/exp/uboone/data/users/cnguyen/CC0Pi_Selection/Anaylzer_unimakeoutputPanos/Unimake_BinningScheme2_FULLDATA_Combinedfiles.root"
+    , "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/systcalc_noNuWro_eventrates.conf" );
     //UnivMake_scheme2_pionSidebandCondition_Muons_contained_v1.root
     // UniMake_scheme2_MCS_FC_Open.root
 //"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/Anaylzer_unimakeoutputPanos/Unimake_BinningScheme2.root"
@@ -6275,7 +6331,7 @@ auto BinVector = GetProjectBinVector();
 
   std::cout<<"Making slice from inclusive "<< std::endl;
 
-  auto* sb_ptr = new SliceBinning( "mybins_mcc9_2D_muon_inclusive_v1_july3_2024.txt" ); //tutorial_reco_slice_config.txt
+  auto* sb_ptr = new SliceBinning( "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/mybins_mcc9_2D_muon_inclusive_v1_Oct16_2024.txt" ); //tutorial_reco_slice_config.txt
   auto& sb = *sb_ptr;
 //
  // mybins_mcc9_2D_muon_inclusive_v1_Oct16_2024.txt
@@ -6292,7 +6348,8 @@ auto BinVector = GetProjectBinVector();
   //std::vector<std::string> xaxistitles_vector{"Cos#theta_{#mu}","p_{#mu} [GeV/c]", "Bin N" };
    int BinNSlice = 9; 
 	TLegend *legendMaster = new TLegend(0.05, 0.05, 0.98, 0.98);
-	std::string MicroBooneTitle = MicroBooNE_LegendTitle_OpenData();
+	//std::string MicroBooneTitle = MicroBooNE_LegendTitle_OpenData();
+	std::string MicroBooneTitle = MicroBooNE_LegendTitle_FullData();
 	//legendMaster->SetHeader(MicroBooneTitle.c_str());
 	legendMaster->SetNColumns(2);
 	legendMaster->SetBorderSize(0);
@@ -6358,15 +6415,15 @@ auto BinVector = GetProjectBinVector();
     // one-based to match the ROOT histograms
     int cat_bin_index = cat_map.size();
 
-    lg1_stacked->AddEntry(slice_bnb->hist_.get(), "Open Data", "pe" );
+    lg1_stacked->AddEntry(slice_bnb->hist_.get(), "Data", "pe" );
     lg1_stacked->AddEntry(slice_mc_plus_ext->hist_.get(), "Total MC", "le" );
 
     if(BinNSlice==sl_idx){
-         legendMaster->AddEntry(slice_bnb->hist_.get(), "Open Data [Stat]", "pe" );
+         legendMaster->AddEntry(slice_bnb->hist_.get(), "Data [Stat]", "pe" );
          legendMaster->AddEntry(slice_mc_plus_ext->hist_.get(), "#muBooNE Tune [Sys+Stat]", "le" );
          
        TH1D*test =  (TH1D*)slice_bnb->hist_.get()->Clone();
-       lg1_Grid->AddEntry(test, "Open Data [Stat]", "pe" );
+       lg1_Grid->AddEntry(test, "Data [Stat]", "pe" );
         auto histclone = (TH1D*)slice_mc_plus_ext->hist_.get()->Clone(uniq());
           
         histclone->SetFillColorAlpha(kRed, 0.8);
@@ -6711,15 +6768,15 @@ auto BinVector = GetProjectBinVector();
  /// Making Grid Figure here 
  ///////////////////////////////////////////////////
  //std::vector<double> WindowZoomScale{5,2,2,1,2,1,1,1,1}; contained
-std::vector<double> WindowZoomScale{5,2,2,2,2,1,1,1,1};
+std::vector<double> WindowZoomScale{4,2,2,2,1,1,1,1,1};
 
  double min_XAxis_GridCanvas = .1;
  double max_XAxis_GridCanvas = 2.0;
  
  double min_YAxis_GridCanvas = 0.0;
- double max_YAxis_GridCanvas = 35.5;
+ double max_YAxis_GridCanvas = 7.5;
  
- double Scaledown = .001;
+ double Scaledown = .0001;
  bool DoScaledown = true; 
  
  
@@ -6738,7 +6795,7 @@ std::vector<double> WindowZoomScale{5,2,2,2,2,1,1,1,1};
   {
     std::cout<<"SLICE : "<< sl_idx <<std::endl;
     int GridBins = sl_idx + 1; 
-    
+    if(GridBins>9)continue;
     const auto& slice = sb.slices_.at( sl_idx );
 
     // We now have all of the reco bin space histograms that we need as input.
@@ -6885,7 +6942,7 @@ std::vector<double> WindowZoomScale{5,2,2,2,2,1,1,1,1};
 	GC_Stack->SetXTitle("p_{#mu} [GeV/c]");
 	GC_Stack->SetYTitleSize(22);
 	GC_Stack->SetXTitleSize(20);  
-	GC_Stack->SetYTitle("NEvents (#times 10^{3}) / [BinWidth]");
+	GC_Stack->SetYTitle("NEvents (#times 10^{4}) / [BinWidth]");
 	GC_Stack->SetTitleAlignmentFor6Hist();
   //leg->Draw("SAME");
   

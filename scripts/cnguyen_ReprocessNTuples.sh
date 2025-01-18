@@ -7,18 +7,18 @@ usage() {
   echo "  -v version     version of your reprocess ntuples"
   echo "  -r runnumbers  Specify runnumbers to filter (comma-separated, e.g., 1,2,3)."
   echo "  -s samples     Specify runnumbers to filter "
-  echo "                      run1 : numuMC,nueMC,dirtMC,extBNB,onBNB,openBNB,detVarCV,detVarLYDown,detVarLYRayleigh,detVarLYAttenuation,detVarSEC,detVarRecomb2,detVarModX,detVarModYZ,"
+  echo "                      run1 : numuMC,nueMC,dirtMC,extBNB,onBNB,openBNB,detVarCV,detVarLYdown,detVarLYrayl,detVarLYatten,detVarSCE,detVarRecomb2,detVarWMX,detVarWMYZ,detVarWMAngleXZ,detVarWMAngleYZ,detVarModX,detVarModYZ,detVarCVExtra,altCVMC"
   echo "  -v version     Specify the version in teck note (e.g. v00_00_01)"
   exit 1
 }
 
 version=current
 config_dir=${XSEC_ANALYZER_DIR}/configs
-input_file=${config_dir}/files_to_process_missing.txt
-output_config=files_to_process_cc0pi_FulldataSet_v2
-output_dir=/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_11_1_2024/ 
+input_file=${config_dir}/file_properties_missing_current.txt
+output_config=files_to_process_output
+output_dir=/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_12_21_2024
 filter_runnumbers=1,2,3
-filter_samples="numuMC,nueMC,dirtMC,extBNB,onBNB,openBNB,detVarCV,detVarLYdown,detVarLYrayl,detVarLYatten,detVarSCE,detVarRecomb2,detVarWMX,detVarWMYZ,detVarWMAngleXZ,detVarWMAngleYZ,detVarCVExtra,altCVMC"
+filter_samples="numuMC,nueMC,dirtMC,extBNB,onBNB,openBNB,detVarCV,detVarLYdown,detVarLYrayl,detVarLYatten,detVarSCE,detVarRecomb2,detVarWMX,detVarWMYZ,detVarWMAngleXZ,detVarWMAngleYZ,detVarModX,detVarModYZ,detVarCVExtra,altCVMC"
 # Parse command-line arguments
 while getopts ":o:r:s:v:" opt; do
   case ${opt} in
