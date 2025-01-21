@@ -36,6 +36,6 @@ else
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/lib
 fi
 
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/exp/uboone/app/users/mastbaum/xgboost/build/lib64
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/exp/uboone/app/users/mastbaum/xgboost/build/lib64:/cvmfs/larsoft.opensciencegrid.org/spack-v0.22.0-fermi/opt/spack/linux-almalinux9-x86_64_v3/gcc-12.2.0/root-6.28.12-hljl7gyomotoqht2uzvhnf73337jq67q/lib/root
 #unset PYTHONHOME
 #unset PYTHONPATH

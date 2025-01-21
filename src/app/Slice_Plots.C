@@ -81,22 +81,28 @@ void tutorial_slice_plots(std::string FPM_Config, std::string SYST_Config, std::
   std::cout << "\t\tWith filename: " << PlotFileName << std::endl;
   std::cout << "\n" << std::endl;
 
+  std::cout << "DEBUG : " << std::endl;
 #ifdef USE_FAKE_DATA
   // Initialize the FilePropertiesManager and tell it to treat the NuWro
   // MC ntuples as if they were data
   auto& fpm = FilePropertiesManager::Instance();
   fpm.load_file_properties( FPM_Config );
 #endif
+  std::cout << "DEBUG : " << std::endl;
 
   // Check that we can read the universe output file
+  std::cout << "DEBUG : " << std::endl;
   TFile* temp_file = new TFile(Univ_Output.c_str(), "read");
   if (!temp_file || temp_file->IsZombie()) {
     std::cerr << "Could not read file: " << Univ_Output << std::endl;
     throw;
   }
+  std::cout << "DEBUG : " << std::endl;
   delete temp_file;
+  std::cout << "DEBUG : " << std::endl;
 
   auto* syst_ptr = new MCC9SystematicsCalculator(Univ_Output, SYST_Config);
+  std::cout << "DEBUG : " << std::endl;
   auto& syst = *syst_ptr;
 
   std::cout << "DEBUG : " << std::endl;

@@ -354,6 +354,7 @@ class UniverseMaker {
     // Add an ntuple input file to the owned TChain
     void add_input_file( const std::string& input_file_name );
     void setup_parallel(const int i, const int n);
+    void setup_number_of_sys_samples(const int s = 10);
 
     // Access the bin definitions
     inline const auto& true_bins() const { return true_bins_; }
@@ -481,4 +482,5 @@ class UniverseMaker {
     SelectionBase *sel_for_categories_;
       int ipara;
       int npara;
+      int sys_samples_;
 };

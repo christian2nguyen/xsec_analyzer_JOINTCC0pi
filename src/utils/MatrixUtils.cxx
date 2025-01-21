@@ -6,6 +6,7 @@
 #include <limits>
 #include <memory>
 #include <sstream>
+#include <iostream>
 
 // ROOT includes
 #include "TDecompQRH.h"
@@ -69,6 +70,7 @@ std::unique_ptr< TMatrixD > invert_matrix( const TMatrixD& mat,
       if ( a == b ) expected_element = 1.;
       double abs_diff = std::abs( element - expected_element );
       if ( abs_diff > inversion_tolerance ) {
+        std::cout << "abs_diff : inversion_tolerance :: " << abs_diff << " : " << inversion_tolerance << std::endl;
         throw std::runtime_error( "Matrix inversion failed" );
       }
     }

@@ -88,6 +88,13 @@ void UniverseMaker::setup_parallel(const int i, const int n){
   npara = n;
 }
 
+// FIXME: program will be very slow with large number of bins
+// in order to do a quick test, only use a few of reweight
+//
+void UniverseMaker::setup_number_of_sys_samples(const int s){
+  sys_samples_ = s;
+}
+
 void UniverseMaker::add_input_file( const std::string& input_file_name )
 {
   // Check to make sure that the input file contains the expected ntuple
@@ -208,6 +215,8 @@ void UniverseMaker::build_universes(
     // Load the TTree for the current TChain entry
     input_chain_.LoadTree( entry );
 
+    if(entry%5000 == 0)
+      std::cout << input_chain_.GetEntries() << "    " << entry << std::endl;
     // If the current entry is in a new TTree, then have all of the
     // TTreeFormula objects make the necessary updates
     if ( treenumber != input_chain_.GetTreeNumber() ) {
@@ -555,6 +564,10 @@ void UniverseMaker::build_universes_memory_efficient(
   bool is_mc;
   input_chain_.SetBranchAddress( "is_mc", &is_mc );
 
+  bool CC1muXp0pi_Selected, CC1muXp0pi_MC_Signal;
+  input_chain_.SetBranchAddress( "Selected", &CC1muXp0pi_MC_Signal );
+  input_chain_.SetBranchAddress( "MC_Signal", &CC1muXp0pi_Selected );
+
   // Get the first TChain entry so that we can know the number of universes
   // used in each vector of weights
   input_chain_.GetEntry( 0 );
@@ -621,9 +634,13 @@ void UniverseMaker::build_universes_memory_efficient(
     cate_weight.clear();
     safe_eventreweight.clear();
 
+    input_chain_.LoadTree( entry );
+    input_chain_.GetEntry( entry );
     if(entry%5000 == 0)
       std::cout << totel_entries << "    " << entry << std::endl;
-    input_chain_.LoadTree( entry );
+    if(!(CC1muXp0pi_MC_Signal || CC1muXp0pi_Selected)) continue;
+
+
 
     // If the current entry is in a new TTree, then have all of the
     // TTreeFormula objects make the necessary updates
@@ -658,7 +675,6 @@ void UniverseMaker::build_universes_memory_efficient(
       }
     }
 
-    input_chain_.GetEntry( entry );
 
     std::vector< FormulaMatch > matched_true_bins;
     double spline_weight = 0.;
@@ -704,8 +720,12 @@ void UniverseMaker::build_universes_memory_efficient(
       const auto& wgt_vec = pair.second;
 
  //     auto& u_vec = universes_.at( wgt_name );
-
-      for ( size_t u = 0u; u < wgt_vec->size(); ++u ) {
+ //
+ 
+      int num_universes = wgt_vec->size();
+   //   sys_samples_ = 10;
+   //   if(num_universes > sys_samples_) num_universes = sys_samples_;
+      for ( size_t u = 0u; u < num_universes; ++u ) {
 
         // No need to use the slightly slower "at" here since we're directly
         // looping over the weight vector
@@ -838,7 +858,9 @@ void UniverseMaker::build_universes_memory_efficient(
     const std::string& weight_name = pair.first;
     size_t num_universes = pair.second->size();
 
-    
+ //     sys_samples_ = 10;
+ //     if(num_universes > sys_samples_) num_universes = sys_samples_;
+
     for ( size_t u = 0u; u < num_universes; ++u ) {
       //if(total_index > 5) break;
       std::cout << "DEBUG : " << __FILE__ << " " << __LINE__ << "  " << weight_name << "  " << num_universes << "  " << total_index << "  " << t_weight_vec->GetEntries() << std::endl;
@@ -866,9 +888,6 @@ void UniverseMaker::build_universes_memory_efficient(
             univ.hist_categ_->Fill(cate_index.at(j), reco_index.at(i), cate_weight.at(j)*reco_weight.at(i)*safe_wgt);
           } // category bins
         }
-        for(int i = 0; i < cate_index.size(); i++){
-          univ.hist_categ_->Fill(cate_index.at(i), cate_weight.at(i));
-        }
       }
       total_index++;
       univ.hist_reco_->Write();
@@ -890,33 +909,25 @@ void UniverseMaker::build_universes_memory_efficient(
   Universe univ(UNWEIGHTED_NAME, 0, num_true_bins, num_reco_bins);
   for(int ievt = 0; ievt < t_weight_vec->GetEntries(); ievt++){
     t_weight_vec->GetEntry(ievt);
-
-    double safe_wgt = safe_eventreweight.at(total_index);
-
-
     for(int i = 0; i < true_index.size(); i++){
-      univ.hist_true_->Fill(true_index.at(i), true_weight.at(i)*safe_wgt);
+      univ.hist_true_->Fill(true_index.at(i), true_weight.at(i));
       for(int j = 0; j < reco_index.size(); j++){
-        univ.hist_2d_->Fill(true_index.at(i), reco_index.at(j), true_weight.at(i)*reco_weight.at(j)*safe_wgt);
+        univ.hist_2d_->Fill(true_index.at(i), reco_index.at(j), true_weight.at(i)*reco_weight.at(j));
       } // reco bins
       for(int j = 0; j < true_index.size(); j++){
-        univ.hist_true2d_->Fill(true_index.at(i), true_index.at(j), true_weight.at(i)*true_weight.at(j)*safe_wgt);
+        univ.hist_true2d_->Fill(true_index.at(i), true_index.at(j), true_weight.at(i)*true_weight.at(j));
       } // true bins
     } // true bins
     for(int i = 0; i < reco_index.size(); i++){
-      univ.hist_reco_->Fill(reco_index.at(i), reco_weight.at(i)*safe_wgt);
+      univ.hist_reco_->Fill(reco_index.at(i), reco_weight.at(i));
       for(int j = 0; j < reco_index.size(); j++){
-        univ.hist_reco2d_->Fill(reco_index.at(i), reco_index.at(j), reco_weight.at(i)*reco_weight.at(j)*safe_wgt);
+        univ.hist_reco2d_->Fill(reco_index.at(i), reco_index.at(j), reco_weight.at(i)*reco_weight.at(j));
       } // reco bins
       for(int j = 0; j < cate_index.size(); j++){
-        univ.hist_categ_->Fill(cate_index.at(j), reco_index.at(i), cate_weight.at(j)*reco_weight.at(i)*safe_wgt);
+        univ.hist_categ_->Fill(cate_index.at(j), reco_index.at(i), cate_weight.at(j)*reco_weight.at(i));
       } // category bins
     }
-    for(int i = 0; i < cate_index.size(); i++){
-      univ.hist_categ_->Fill(cate_index.at(i), cate_weight.at(i));
-    }
   }
-  total_index++;
   univ.hist_reco_->Write();
   univ.hist_reco2d_->Write();
   if(univ.hist_true_->GetEntries() > 0.){
@@ -926,7 +937,7 @@ void UniverseMaker::build_universes_memory_efficient(
     univ.hist_categ_->Write();
   }
 
-  //  std::remove(output_file_weight.c_str());
+  std::remove(output_file_weight.c_str());
 
   input_chain_.ResetBranchAddresses();
 }

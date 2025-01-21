@@ -138,15 +138,42 @@ void Unfolder(std::string XSEC_Config, std::string SLICE_Config, std::string Out
 	const auto& uc_matrix = uc_pair.second;
 
 	SliceHistogram* Slice_unf = SliceHistogram::make_slice_histogram( *xsec.result_.unfolded_signal_, Slice, uc_matrix.get() );
-	TH1* SliceHist = Slice_unf->hist_.get();
-        SliceHist->Scale(1.0, "width");
-	if (RT == "XsecUnits") {
-	  SliceHist->Scale(1.0 / conv_factor);
-	}
-	SliceHist->Write((SliceVariableName+"_"+uc_name).c_str());
 
-	if (DumpToText) dump_text_column_vector( OutputDirectory+"/"+RT+"_vec_table_unfolded_signal_"+uc_name+TextExtension, *xsec.result_.unfolded_signal_ );
-	if (DumpToPlot) draw_column_vector( OutputDirectory+"/"+RT+"_vec_table_unfolded_signal_"+uc_name+PlotExtension, *xsec.result_.unfolded_signal_, "Unfolded Signal", "Bin Number", "Cross Section [#times 10^{-38} cm^{2}]");
+        if(RT == "EventCountUnits" && ( uc_name == "total" || uc_name == "DataStats" ) && SliceVariableName != "binnumber63"){
+          std::cout << SliceVariableName << std::endl;
+          for ( const auto& gen_pair : extr->get_prediction_map()) {
+            std::string gen_short_name = gen_pair.second->name();
+            TMatrixD temp_gen = gen_pair.second->get_prediction();
+            if (RT == "XsecUnits") {
+              temp_gen *= (1.0 / conv_factor);
+            }
+            std::unique_ptr<TH1D> temp_gen_hist = std::unique_ptr<TH1D>(Matrix_To_TH1(temp_gen,gen_short_name,SliceVariableName,"Events"));
+            std::unique_ptr<SliceHistogram> Slice_unf_mc = std::unique_ptr<SliceHistogram>(SliceHistogram::make_slice_histogram(*temp_gen_hist.get(), Slice));
+            SliceHistogram::Chi2Result un_chi2 = Slice_unf_mc->get_chi2(*Slice_unf);
+            std::cout << "DEBUG: " << __FILE__ << "  "  << gen_short_name <<  "  " 
+              << __LINE__ << "  " << un_chi2.chi2_ << "/" << 
+              un_chi2.dof_ 
+              << std::endl;
+            TMatrixD chi2results(1, 4);
+            chi2results(0, 0) = un_chi2.chi2_;
+            chi2results(0, 1) = double(un_chi2.num_bins_);
+            chi2results(0, 2) = double(un_chi2.dof_);
+            chi2results(0, 3) = un_chi2.p_value_;
+            chi2results.Write((gen_short_name+"_chisquare_" + uc_name).c_str());
+
+
+          }
+        }
+
+        TH1* SliceHist = Slice_unf->hist_.get();
+        SliceHist->Scale(1.0, "width");
+        if (RT == "XsecUnits") {
+          SliceHist->Scale(1.0 / conv_factor);
+        }
+        SliceHist->Write((SliceVariableName+"_"+uc_name).c_str());
+
+        if (DumpToText) dump_text_column_vector( OutputDirectory+"/"+RT+"_vec_table_unfolded_signal_"+uc_name+TextExtension, *xsec.result_.unfolded_signal_ );
+        if (DumpToPlot) draw_column_vector( OutputDirectory+"/"+RT+"_vec_table_unfolded_signal_"+uc_name+PlotExtension, *xsec.result_.unfolded_signal_, "Unfolded Signal", "Bin Number", "Cross Section [#times 10^{-38} cm^{2}]");
       }
 
       //======================================================================================
@@ -154,21 +181,22 @@ void Unfolder(std::string XSEC_Config, std::string SLICE_Config, std::string Out
 
       //DB Still need to check this loop as I don't currently have generator prediction files for tutorial binning scheme
       for ( const auto& gen_pair : extr->get_prediction_map()) {
-	std::string gen_short_name = gen_pair.second->name();
-	TMatrixD temp_gen = gen_pair.second->get_prediction();
-	if (RT == "XsecUnits") {
-	  temp_gen *= (1.0 / conv_factor);
-	}
+        std::string gen_short_name = gen_pair.second->name();
+        TMatrixD temp_gen = gen_pair.second->get_prediction();
+        if (RT == "XsecUnits") {
+          temp_gen *= (1.0 / conv_factor);
+        }
 
-	TH1D* temp_gen_hist = Matrix_To_TH1(temp_gen,gen_short_name,SliceVariableName,"Events");
+        TH1D* temp_gen_hist = Matrix_To_TH1(temp_gen,gen_short_name,SliceVariableName,"Events");
 
         SliceHistogram* Slice_unf = SliceHistogram::make_slice_histogram(*temp_gen_hist, Slice);
+
         TH1* SliceHist = Slice_unf->hist_.get();
         SliceHist->Scale(1.0, "width");
-	SliceHist->Write(("GenPred_"+SliceVariableName+"_"+gen_short_name).c_str());
+        SliceHist->Write(("GenPred_"+SliceVariableName+"_"+gen_short_name).c_str());
 
-	if (DumpToText) dump_text_column_vector( OutputDirectory+"/"+RT+"_vec_table_" + gen_short_name + TextExtension, temp_gen );
-	if (DumpToPlot) draw_column_vector( OutputDirectory+"/"+RT+"_vec_table_" + gen_short_name + PlotExtension, temp_gen, (gen_short_name + " Prediction").c_str(), "Bin Number", "Cross Section [#times 10^{-38} cm^{2}]");
+        if (DumpToText) dump_text_column_vector( OutputDirectory+"/"+RT+"_vec_table_" + gen_short_name + TextExtension, temp_gen );
+        if (DumpToPlot) draw_column_vector( OutputDirectory+"/"+RT+"_vec_table_" + gen_short_name + PlotExtension, temp_gen, (gen_short_name + " Prediction").c_str(), "Bin Number", "Cross Section [#times 10^{-38} cm^{2}]");
       }
 
     }
