@@ -11,12 +11,14 @@ if [ "$MY_OS_REL" = "AlmaLinux" ]; then
   spack load root@6.28.12 arch=linux-almalinux9-x86_64_v3
 elif [ "$MY_OS_REL" = "Scientific Linux" ]; then
   # On SL7, we get ROOT as a side-effect of setting up uboonecode
-  source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
-  setup uboonecode v08_00_00_84 -q e17:prof
+  source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone_mcc9.sh
+  setup uboonecode v08_00_00_86 -q e17:prof
+  setup root v6_28_12 -q e26:p3915:prof
 else
   echo "WARNING: Unrecognized OS name \"${MY_OS_REL}\""
   echo "Unable to automatically set up ROOT"
 fi
+
 
 # Finds the directory where this script is located. This method isn't
 # foolproof. See https://stackoverflow.com/a/246128/4081973 if you need
@@ -36,4 +38,6 @@ else
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/lib
 fi
 
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/exp/uboone/app/users/mastbaum/xgboost/build/lib64
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/exp/uboone/app/users/mastbaum/xgboost/build/lib64:/cvmfs/larsoft.opensciencegrid.org/spack-v0.22.0-fermi/opt/spack/linux-almalinux9-x86_64_v3/gcc-12.2.0/root-6.28.12-hljl7gyomotoqht2uzvhnf73337jq67q/lib/root
+#unset PYTHONHOME
+#unset PYTHONPATH

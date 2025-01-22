@@ -169,7 +169,7 @@ const std::string CCNPI_SIDEBAND_SELECTION =
   textitle = "p_{p}; GeV/c";
 
   Block1D *b1r_sideband_NC = new Block1D(branchexpr_sideband, title, textitle,proton_binningSideband, NC_SIDEBAND_SELECTION, kSidebandRecoBin);
-  vect_sideband.emplace_back(b1r_sideband_NC);
+//  vect_sideband.emplace_back(b1r_sideband_NC);
 
 
 
@@ -182,7 +182,7 @@ const std::string CCNPI_SIDEBAND_SELECTION =
 
 
   Block1D *b1r_sideband_Npi_costheta = new Block1D(branchexpr_sideband, title, textitle, Costheta_sideBand, CCNPI_SIDEBAND_SELECTION, kSidebandRecoBin);
-  vect_sideband.emplace_back(b1r_sideband_Npi_costheta);
+//  vect_sideband.emplace_back(b1r_sideband_Npi_costheta);
 
 
 

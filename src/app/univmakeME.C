@@ -230,8 +230,10 @@ int main( int argc, char* argv[] ) {
     univ_maker.add_input_file( input_file_name.c_str() );
     univ_maker.setup_parallel(iparallel, nparallel);
 
-    if(index_parallel.size()==2){
-    }
+    //univ_maker.build_universes();
+    //univ_maker.build_universes_memory_efficient(&output_file_name, &input_file_name);
+
+
 
     //bool has_event_weights = is_reweightable_mc_ntuple( input_file_name );
     bool has_event_weights = ntuple_type_is_reweightable_mc(fpm.get_ntuple_file_type(input_file_name));
@@ -239,16 +241,17 @@ int main( int argc, char* argv[] ) {
     if ( has_event_weights ) {
       // If the check above was successful, then run all of the histogram
       // calculations in the usual way
-      univ_maker.build_universes();
+      // univ_maker.build_universes();
+      univ_maker.build_universes_memory_efficient(&output_file_name, &input_file_name);
     }
     else {
       // Passing in the fake list of explicit branch names below instructs
       // the UniverseMaker class to ignore all event weights while
       // processing the current ntuple
       univ_maker.build_universes( { "FAKE_BRANCH_NAME" } );
+      univ_maker.save_histograms( output_file_name, input_file_name );
     }
 
-//    univ_maker.save_histograms( output_file_name, input_file_name );
 
     // The root TDirectoryFile name is the same across all iterations of this
     // loop, so just set it once on the first iteration

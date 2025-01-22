@@ -21,4 +21,20 @@ if [ ! -f "$BIN_CONFIG" ]; then
   echo "BIN_CONFIG \"${BIN_CONFIG}\" not found"
   exit 1
 fi
-univmake ${FPM_CONFIG} ${BIN_CONFIG} ${output_dir}/${OUTPUT_ROOT_FILE} ${FPM_CONFIG}
+
+#univmake ${FPM_CONFIG} ${BIN_CONFIG} ${output_dir}/${OUTPUT_ROOT_FILE} ${FPM_CONFIG} old method
+
+if [ x${PARALLEL} = x ]; then
+  echo "time univmake -f ${FPM_CONFIG} -b ${BIN_CONFIG} -o ${OUTPUT_ROOT_FILE} -p 0 1"
+#  time univmake -f ${FPM_CONFIG} -b ${BIN_CONFIG} -o ${OUTPUT_ROOT_FILE} -p 0 1
+else
+  outut_path=${OUTPUT_ROOT_FILE%/*}
+  file_output=`basename ${OUTPUT_ROOT_FILE}`
+  for i in $(seq 0 `expr ${PARALLEL} - 1`)
+  do
+    echo "time univmake -f ${FPM_CONFIG} -b ${BIN_CONFIG} -o ${outut_path}/${i}_${file_output} -p $i ${PARALLEL}"
+    nohup bash -c "time univmakeME -f ${FPM_CONFIG} -b ${BIN_CONFIG} -o ${outut_path}/${i}_${file_output} -p $i ${PARALLEL} 2>&1 > ${outut_path}/${i}_${file_output}.log" >> ${outut_path}/${i}_${file_output}.log &
+  done
+  sleep 30s
+fi
+rm ${FPM_CONFIG}

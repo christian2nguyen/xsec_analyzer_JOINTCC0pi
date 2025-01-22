@@ -202,6 +202,10 @@ UnfoldedMeasurement Unfolder::blockwise_unfold( const TMatrixD& data_signal,
     }
 
     // Unfold the measurement for the current block
+//    block_data_signal.Print();
+//    block_data_covmat.Print();
+//    block_smearcept.Print();
+//    block_prior_true_signal.Print();
     auto block_result = this->unfold( block_data_signal, block_data_covmat,
       block_smearcept, block_prior_true_signal );
 

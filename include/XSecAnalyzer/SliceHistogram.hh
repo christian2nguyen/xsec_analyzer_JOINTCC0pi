@@ -380,13 +380,16 @@ SliceHistogram::Chi2Result SliceHistogram::get_chi2(
   // Create a 1D vector containing the difference between the two slice
   // histograms in each bin
   TMatrixD diff_vec( 1, num_bins );
+  TMatrixD evt_vec1( 1, num_bins );
+  TMatrixD evt_vec2( 1, num_bins );
   for ( int a = 0; a < num_bins; ++a ) {
     // Note the one-based bin indices used for ROOT histograms
     double counts = hist_->GetBinContent( a + 1 );
     double other_counts = other.hist_->GetBinContent( a + 1 );
     diff_vec( 0, a ) = counts - other_counts;
+    evt_vec1(0, a) = counts;
+    evt_vec2(0, a) = other_counts;
   }
-
   // Multiply diff * covMat^{-1} * diff^{T} to get chi-squared
   TMatrixD temp1( diff_vec, TMatrixD::kMult, *inverse_cov_matrix );
   TMatrixD temp2( temp1, TMatrixD::kMult, diff_vec.T() );

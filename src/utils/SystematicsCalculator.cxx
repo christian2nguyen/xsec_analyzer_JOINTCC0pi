@@ -1,6 +1,6 @@
 // XSecAnalyzer includes
 #include "XSecAnalyzer/SystematicsCalculator.hh"
-//#include <filesystem> only in AL9 i think liang said code removed that was trying it
+#include <filesystem> //this is for AL9 need c++17 , I dont think its required with this my version 
 #include <TSystem.h>
 
 void set_stats_and_dir( Universe& univ ) {
@@ -91,7 +91,7 @@ SystematicsCalculator::SystematicsCalculator(
   // for the combination of all analysis ntuples. Otherwise, we won't
   // write to the file.
   // TODO: consider adjusting this to be less dangerous
-  TFile in_tfile( input_respmat_file_name.c_str(), "update" );
+  TFile in_tfile( input_respmat_file_name.c_str(), "read" );
 
   TDirectoryFile* root_tdir = nullptr;
 
@@ -116,10 +116,10 @@ SystematicsCalculator::SystematicsCalculator(
   // and the name of the FilePropertiesManager configuration file that
   // is currently active. Replace any '/' characters in the latter to
   // avoid TDirectoryFile path problems.
-  std::string fpm_config_file = fpm.config_file_name();
+  std::string fpm_config_file_bak = fpm.config_file_name();
   // Do the '/' replacement here in the same way as is done for
   // TDirectoryFile subfolders by the UniverseMaker class
-  fpm_config_file = ntuple_subfolder_from_file_name( fpm_config_file );
+  std::string fpm_config_file = ntuple_subfolder_from_file_name( fpm_config_file_bak );
 
   std::cout << "\nInitialising SystematicsCalculator with options:\n";
   std::cout << "\tsyst_config_file_name_: " << syst_config_file_name_ << '\n';
@@ -129,13 +129,18 @@ SystematicsCalculator::SystematicsCalculator(
 
   std::string total_subfolder_name = TOTAL_SUBFOLDER_NAME_PREFIX
     + fpm_config_file;
+  std::filesystem::path respmat_path(input_respmat_file_name);
+  std::filesystem::path fpm_file_name(fpm_config_file_bak);
+  fpm_file_name.replace_extension("root");
+  std::string pot_summed_file_name = respmat_path.parent_path().native() + "/" + fpm_file_name.filename().native();
+  std::cout << pot_summed_file_name << std::endl;
 
   // Check whether a set of POT-summed histograms for each universe
   // is already present in the input response matrix file. This is
   // signalled by a TDirectoryFile with a name matching the string
   // total_subfolder_name.
-  TDirectoryFile* total_subdir = nullptr;
-  root_tdir->GetObject( total_subfolder_name.c_str(), total_subdir );
+  //TDirectoryFile* total_subdir = nullptr;
+  //root_tdir->GetObject( total_subfolder_name.c_str(), total_subdir );
 
 
   // Use the factory to load and instantiate the selection object used to
@@ -156,9 +161,9 @@ SystematicsCalculator::SystematicsCalculator(
   const auto& category_map = sel_for_categ_->category_map();
   Universe::set_num_categories( category_map.size() );
 
-
-
-  if ( !total_subdir ) {
+  TFile *pot_summed_file = nullptr;
+  bool is_pot_submmed_file = gSystem->AccessPathName(pot_summed_file_name.c_str(), kFileExists);
+  if ( is_pot_submmed_file ) {
 
     // We couldn't find the pre-computed POT-summed universe histograms,
     // so make them "on the fly" and store them in this object
@@ -166,16 +171,21 @@ SystematicsCalculator::SystematicsCalculator(
 
     // Create a new TDirectoryFile as a subfolder to hold the POT-summed
     // universe histograms
-    total_subdir = new TDirectoryFile( total_subfolder_name.c_str(),
-      "universes", "", root_tdir );
+    TFile out_pot_summed(pot_summed_file_name.c_str(), "recreate");
+    TDirectoryFile *total_subdir = new TDirectoryFile( total_subfolder_name.c_str(),
+      "universes", "");
 
     // Write the universes to the new subfolder for faster loading
     // later
     this->save_universes( *total_subdir );
+    out_pot_summed.Close();
   }
   else {
     // Retrieve the POT-summed universe histograms that were built
     // previously
+    TFile out_pot_summed(pot_summed_file_name.c_str(), "read");
+    TDirectoryFile *total_subdir = nullptr;
+    out_pot_summed.GetObject( total_subfolder_name.c_str(), total_subdir );
     this->load_universes( *total_subdir );
   }
   // Also load the configuration of true and reco bins used to create the
@@ -756,6 +766,7 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
 
           double temp_run_pot = run_to_bnb_pot_map.at( run );
           double temp_scale_factor = (temp_run_pot / total_dv_mc_pot) * (file_pot / total_dv_mc_pot);
+//          std::cout << __FILE__ << "  " << __LINE__ << " " << temp_run_pot << " " << total_dv_mc_pot << "  " << file_pot << "  " << temp_scale_factor << std::endl;
 
           // Apply the scaling factor defined above to all histograms that
           // will be owned by the new Universe
@@ -774,7 +785,7 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
           temp_univ_ptr->hist_categ_->Add( hist_categ.get() );
           temp_univ_ptr->hist_reco2d_->Add( hist_reco2d.get() );
           temp_univ_ptr->hist_true2d_->Add( hist_true2d.get() );
-
+          
           // Adjust the owned histograms to avoid auto-deletion problems
           set_stats_and_dir( *temp_univ_ptr );
 
@@ -851,6 +862,7 @@ void SystematicsCalculator::build_universes( TDirectoryFile& root_tdir ) {
           // each universe to the BNB data POT for the current run
           double run_bnb_pot = run_to_bnb_pot_map.at( run );
           double rw_scale_factor = run_bnb_pot / file_pot;
+          std::cout << run_bnb_pot << "  " << file_pot << "  " << rw_scale_factor  << std::endl;
 
           // Iterate over the reweighting universes, retrieve the
           // histograms for each, and add their POT-scaled contributions
@@ -1182,6 +1194,7 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       std::string cm_name;
       for ( int cm = 0; cm < count; ++cm ) {
         config_file >> cm_name;
+//        if(detvar_universes_.size() == 10 && cm_name == "detVarLYdown") continue;
         if ( !matrix_map.count(cm_name) ) {
           throw std::runtime_error( "Undefined covariance matrix " + cm_name );
         }
@@ -1260,8 +1273,10 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       std::string ntuple_type_str;
       config_file >> ntuple_type_str;
 
+
       const auto& fpm = FilePropertiesManager::Instance();
       auto ntuple_type = fpm.string_to_ntuple_type( ntuple_type_str );
+ //     if( ntuple_type == NFT::kDetVarMCLYdown && detvar_universes_.size() == 10) continue;
 
       // Check that it's valid. If not, then complain.
       bool is_not_detVar = !ntuple_type_is_detVar( ntuple_type );
@@ -1283,6 +1298,10 @@ std::unique_ptr< CovMatrixMap > SystematicsCalculator::get_covariances() const
       {
         detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVExtra ).get();
       }
+//      else if(ntuple_type == NFT::kDetVarMCLYdown){
+//      std::cout << __FILE__ << "  " << __FUNCTION__ << "  " << __LINE__ << std::endl;
+//        detVar_cv_u = detvar_universes_.at( NFT::kDetVarMCCVLYdown ).get();
+//      }
 
       make_cov_mat( *this, temp_cov_mat, *detVar_cv_u,
         *detVar_alt_u, false, false );
@@ -1496,6 +1515,11 @@ MeasuredEvents SystematicsCalculator::get_measured_events() const
   // Get the total covariance matrix on the reco-space EXT+MC prediction
   // (this will not change after subtraction of the central-value background)
   auto cov_map_ptr = this->get_covariances();
+
+//  for(auto & cov_map : *cov_map_ptr){
+//    std::cout << __FILE__ << "  " << __LINE__ << "  " << cov_map.first << std::endl;
+//  }
+
   auto temp_cov = cov_map_ptr->at( "total" ).get_matrix();
 
   // Extract just the covariance matrix block that describes the ordinary reco

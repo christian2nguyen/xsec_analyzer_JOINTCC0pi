@@ -45,7 +45,7 @@ enum class NtupleFileType {
   // An alternate CV MC simulation
   kAltCVMC,
 
-  kDetVarMCCVLYdown, // FIXME: a temporary solution to do LY down detVar; Run 1 has no LY down detvar; I keep run 2-5 in a alternate CV
+  //kDetVarMCCVLYdown, // FIXME: a temporary solution to do LY down detVar; Run 1 has no LY down detvar; I keep run 2-5 in a alternate CV
   // Placeholder for invalid values
   kUnknown,
 };
@@ -58,8 +58,7 @@ inline bool ntuple_type_is_detVar( const NtupleFileType& type ) {
     NtupleFileType::kDetVarMCRecomb2, NtupleFileType::kDetVarMCSCE,
     NtupleFileType::kDetVarMCWMAngleXZ, NtupleFileType::kDetVarMCWMAngleYZ,
     NtupleFileType::kDetVarMCWMdEdx, NtupleFileType::kDetVarMCWMX,
-    NtupleFileType::kDetVarMCWMYZ, NtupleFileType::kDetVarMCCVExtra,
-    NtupleFileType::kDetVarMCCVLYdown
+    NtupleFileType::kDetVarMCWMYZ, NtupleFileType::kDetVarMCCVExtra
   };
 
   const auto begin = detVar_types.cbegin();
@@ -305,7 +304,6 @@ class FilePropertiesManager {
       { "detVarWMX", NtupleFileType::kDetVarMCWMX },
       { "detVarWMYZ", NtupleFileType::kDetVarMCWMYZ },
       { "detVarCVExtra", NtupleFileType::kDetVarMCCVExtra },
-      { "detVarCVLYdown", NtupleFileType::kDetVarMCCVLYdown },
       { "altCVMC", NtupleFileType::kAltCVMC },
     };
 

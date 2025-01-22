@@ -321,7 +321,7 @@ SliceBinning::SliceBinning( const std::string& config_file_name ) {
     // from the edge_map.
     for ( const auto& pair : edge_map ) {
       size_t var_idx = pair.first;
-      const auto& var_spec = slice_vars_.at( var_idx );
+      const auto& var_spec = slice_vars_.at( var_idx  );
 
       slice_title += "; " + var_spec.name_;
       if ( !var_spec.units_.empty() ) {

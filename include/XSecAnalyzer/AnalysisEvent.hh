@@ -56,6 +56,16 @@ public:
   MyPointer< std::vector<float> > mc_nu_daughter_endy_;
   MyPointer< std::vector<float> > mc_nu_daughter_endz_;
 
+  // Generator truth
+  MyPointer< std::vector<float> >  mc_generator_E_;
+  MyPointer< std::vector<float> >  mc_generator_px_;
+  MyPointer< std::vector<float> >  mc_generator_py_;
+  MyPointer< std::vector<float> >  mc_generator_pz_;
+  MyPointer< std::vector<int> > mc_generator_pdg_;
+  MyPointer< std::vector<int> > mc_generator_mother_;
+  MyPointer< std::vector<int> > mc_generator_rescatter_;
+  MyPointer< std::vector<int> > mc_generator_trackid_;
+  MyPointer< std::vector<int> > mc_generator_statuscode_;
 
   MyPointer< std::vector<float> > pfp_track_score_;
 

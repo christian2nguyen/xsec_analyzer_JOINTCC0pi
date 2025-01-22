@@ -25,9 +25,9 @@ SelectionBase* SelectionFactory::CreateSelection(
   else if ( selection_name == "CC1muNp0pi" ) {
     sel = new CC1muNp0pi;
   }
-  //else if ( selection_name == "CC1muXp0pi" ) {
-  //  sel = new CC1muXp0pi;
-  //}
+  else if ( selection_name == "CC1muXp0pi" ) {
+    sel = new CC1muXp0pi;
+  }
   else if ( selection_name == "JOINTCC0pi" ) {
     sel = new JOINTCC0pi;
   }

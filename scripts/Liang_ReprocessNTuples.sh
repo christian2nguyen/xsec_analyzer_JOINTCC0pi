@@ -14,9 +14,9 @@ usage() {
 
 version=current
 config_dir=${XSEC_ANALYZER_DIR}/configs
-input_file=${config_dir}/files_to_process_cthorpe.txt
-output_config=file_properties_cthorpe
-output_dir=../Output
+input_file=${config_dir}/files_to_process_liangliu.txt
+output_config=file_properties_run1_fsi
+output_dir=/exp/uboone/data/users/liangliu/workarea/fsi/ntuple
 filter_runnumbers=1,2,3,4,5
 filter_samples="numuMC,nueMC,dirtMC,extBNB,onBNB,openBNB,detVarCV,detVarLYdown,detVarLYrayl,detVarLYatten,detVarSCE,detVarRecomb2,detVarWMX,detVarWMYZ,detVarWMAngleXZ,detVarWMAngleYZ,detVarCVExtra,altCVMC"
 # Parse command-line arguments
@@ -132,11 +132,10 @@ fi
 echo "# `date`" > ${config_dir}/${output_config}
 while IFS= read -r line; do
   # Skip comments and empty lines
-  if [[ "$line" =~ ^# ]] || [[ -z "$line" ]]; then
+  if [[ ${line:0:1} == "#" ]] || [[ -z "$line" ]]; then
   echo $line >> ${config_dir}/${output_config}
     continue
   fi
-  
   # Split the line into parts
   parts=($line)
   file_name=${parts[0]}
@@ -169,8 +168,8 @@ while IFS= read -r line; do
   echo "Scaling Factor: $scaling_factor"
   output_file_name="${output_dir}/xsec-${version}-$(basename ${file_name})"
   echo "Output file name: ${output_file_name}"
-  echo "time ProcessNTuples ${file_name} CC1muXp0pi ${output_file_name}"
-  time ProcessNTuples ${file_name} CC1muXp0pi ${output_file_name}
+  echo "time ProcessNTuplesMT ${file_name} CC1muXp0pi ${output_file_name}"
+  bash -c  "time ProcessNTuples ${file_name} CC1muXp0pi ${output_file_name}"  2>&1  > ${output_file_name}log  &
   echo "${output_file_name} $index $sample_type $num_events $scaling_factor" >> ${config_dir}/${output_config}
   echo "--------------------------------"
 

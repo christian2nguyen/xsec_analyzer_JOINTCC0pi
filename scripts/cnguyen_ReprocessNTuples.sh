@@ -132,11 +132,10 @@ fi
 echo "# `date`" > ${config_dir}/${output_config}
 while IFS= read -r line; do
   # Skip comments and empty lines
-  if [[ "$line" =~ ^# ]] || [[ -z "$line" ]]; then
+  if [[ ${line:0:1} == "#" ]] || [[ -z "$line" ]]; then
   echo $line >> ${config_dir}/${output_config}
     continue
   fi
-  
   # Split the line into parts
   parts=($line)
   file_name=${parts[0]}
@@ -170,7 +169,7 @@ while IFS= read -r line; do
   output_file_name="${output_dir}/xsec-${version}-$(basename ${file_name})"
   echo "Output file name: ${output_file_name}"
   echo "time ProcessNTuples ${file_name} JOINTCC0pi ${output_file_name}"
-  time ProcessNTuples ${file_name} JOINTCC0pi ${output_file_name}
+#  nohup  ProcessNTuplesMT ${file_name} JOINTCC0pi ${output_file_name}  > ${output_file_name}log 
   echo "${output_file_name} $index $sample_type $num_events $scaling_factor" >> ${config_dir}/${output_config}
   echo "--------------------------------"
 
