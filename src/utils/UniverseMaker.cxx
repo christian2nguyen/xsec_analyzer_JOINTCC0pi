@@ -78,19 +78,23 @@ void UniverseMaker::init( std::istream& in_file ) {
 void UniverseMaker::add_input_file( const std::string& input_file_name )
 {
   // Check to make sure that the input file contains the expected ntuple
+  std::cout << "DEBUG UniverseMaker::add_input_file - Point 0"<<std::endl;
   TFile temp_file( input_file_name.c_str(), "read" );
 
   // Temporary storage
   TTree* temp_tree;
-
+  std::cout << "DEBUG UniverseMaker::add_input_file - Point 1"<<std::endl;
   std::string tree_name = input_chain_.GetName();
   temp_file.GetObject( tree_name.c_str(), temp_tree );
+  std::cout << "DEBUG UniverseMaker::add_input_file - Point 2"<<std::endl;
   if ( !temp_tree ) throw std::runtime_error( "Missing ntuple TTree "
     + tree_name + " in the input ntuple file " + input_file_name );
 
   // If we've made it here, then the input file has passed all of the checks.
   // Add it to the input TChain.
+  std::cout << "DEBUG UniverseMaker::add_input_file - Point 3"<<std::endl;
   input_chain_.AddFile( input_file_name.c_str() );
+  std::cout << "DEBUG UniverseMaker::add_input_file - Point 4"<<std::endl;
 }
 
 void UniverseMaker::prepare_formulas() {
@@ -190,6 +194,7 @@ void UniverseMaker::build_universes(
 
   int treenumber = 0;
   for ( long long entry = 0; entry < input_chain_.GetEntries(); ++entry ) {
+  if(entry%1000==0) std::cout<<"\rUniverseMaker::build_universes "<<entry<<" of "<<input_chain_.GetEntries()<<std::flush;
     // Load the TTree for the current TChain entry
     input_chain_.LoadTree( entry );
 

@@ -32,7 +32,7 @@ SHARED_LIB := $(LIB_DIR)/libXSecAnalyzer.$(SHARED_LIB_SUFFIX)
 XGBOOST=/exp/uboone/app/users/mastbaum/xgboost/build
 CC0PI_ANALYZER_FLAGS = -I${XGBOOST}/include -L${XGBOOST}/lib64 -lxgboost -g
 
-CXXFLAGS := -std=c++17 $(shell root-config --cflags) $(CC0PI_ANALYZER_FLAGS) -O3 -g -I$(INCLUDE_DIR)
+CXXFLAGS := $(shell root-config --cflags) $(CC0PI_ANALYZER_FLAGS) -O3 -g -I$(INCLUDE_DIR)
 LDFLAGS := $(shell root-config --libs) -L$(LIB_DIR) -lXSecAnalyzer
 
 # Source files to use when building the main shared library

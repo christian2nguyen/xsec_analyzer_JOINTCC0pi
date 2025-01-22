@@ -15,7 +15,7 @@ std::cout<<"Starting::Muon_Pmu_Study_CC0Pi"<<std::endl;
   runs_to_use_ = { 1,2,3 };
 
   // Prefix for the output bin and slice configuration text files
-  out_config_prefix_ = "Muon_MCS_Panels_v2";
+  out_config_prefix_ = "Muon_MCS_Panels_subpanels";
 
   // Selection to use with this binning scheme
   selection_name_ = "JOINTCC0pi";
@@ -105,7 +105,7 @@ std::cout<<"Starting::Muon_Pmu_Study_CC0Pi"<<std::endl;
  branchexpr = "p3mu_mcs.CosTheta();";
   // only the name of branch and the selection is different from true.
   Block1D *b1dt_cos_reco = new Block1D(branchexpr, title, textitle, costheta_1d, selection_reco, kOrdinaryRecoBin);
-  vect_block.emplace_back(b1dt_cos_true,b1dt_cos_reco);
+  //vect_block.emplace_back(b1dt_cos_true,b1dt_cos_reco);
   
   // the title "title; unit" is used in plot in root style
   title ="cos#theta;p_{#mu};GeV/c;";
@@ -170,7 +170,7 @@ Block2D *b2dmuon_mom_costheta_true_scheme2 = new Block2D(branchexpr_true_scheme2
 
   Block1D *b1r_sideband_trklengh = new Block1D(branchexpr_sideband, title, textitle, trk_len_v_edges, selection_reco, kSidebandRecoBin);
 
-   vect_sideband.emplace_back(b1r_sideband_trklengh);
+   //vect_sideband.emplace_back(b1r_sideband_trklengh);
   
   
    branchexpr_sideband = "sel_PanelClosesttoEndMuonTrk;SideN";
@@ -339,7 +339,7 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
       "ClosestSide;;P_{mu};GeV",
        multiply_Sides_Pmu, selection_reco, kSidebandRecoBin);  
     
-    vect_sideband.emplace_back(b2d_Mulitply_ClosestSide_Pmu_reco);
+    //vect_sideband.emplace_back(b2d_Mulitply_ClosestSide_Pmu_reco);
     
             std::map< double, std::vector<double> > multiply_Sides_costheta = {
   {-0.5, costheta},   
@@ -360,7 +360,7 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
       "ClosestSide;;P_{mu};GeV",
       multiply_Sides_costheta, selection_reco, kSidebandRecoBin);  
        
-    //  vect_sideband.emplace_back(b2d_Mulitply_ClosestSide_costheta_reco);
+      //vect_sideband.emplace_back(b2d_Mulitply_ClosestSide_costheta_reco);
     
             std::map< double, std::vector<double> > multiply_Sides_trackLenght = {
  {-0.5, trk_len_v_edges},   
@@ -380,7 +380,35 @@ vect_sideband.emplace_back(b2d_TrackLength_reco_inclusive);
       "ClosestSide;;TkLen_{mu};cm",
        multiply_Sides_trackLenght, selection_reco, kSidebandRecoBin);  
     
-      //  vect_sideband.emplace_back(b2d_Mulitply_trklenSides_reco);
+    //vect_sideband.emplace_back(b2d_Mulitply_trklenSides_reco);
+    
+    
+    
+    std::vector<double> SubPanels_vector;
+for (double i = 6.5; i <= 54.5; i += 1.0) {
+    SubPanels_vector.push_back(i);
+}
+    
+    
+                std::map< double, std::vector<double> > multiply_Sides_SubPanels = {
+ {-0.5, SubPanels_vector},   
+  {0.5, SubPanels_vector}, 
+  {1.5,  SubPanels_vector},
+  {2.5,  SubPanels_vector},
+  {3.5,  SubPanels_vector},
+  {4.5,  SubPanels_vector},
+  {5.5,  SubPanels_vector},
+  {6.5, {} }
+  }; 
+    
+      branchexpr_reco_scheme1 = "sel_PanelClosesttoEndMuonTrk;;sel_PanelClosestSubPaneltoEndMuonTrk;";
+
+        Block2D *b2d_Mulitply_SubPanels_reco = new Block2D(branchexpr_reco_scheme1,
+      "ClosestSide;;subPanels;cm", 
+      "ClosestSide;;subPanels;cm",
+       multiply_Sides_SubPanels, selection_reco, kSidebandRecoBin);  
+    
+        vect_sideband.emplace_back(b2d_Mulitply_SubPanels_reco);
     
     
 /*

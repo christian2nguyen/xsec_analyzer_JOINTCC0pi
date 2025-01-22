@@ -32,7 +32,8 @@
 //#include "UBTH2Poly.h"  
 #include "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/include/XSecAnalyzer/UBTH2Poly.hh"
 #include "EventCategory.hh"
-
+//#include "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/include/XSecAnalyzer/SliceBinning.hh"
+//#include "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/include/XSecAnalyzer/SliceHistogram.hh"
 //#include "../SliceBinning.hh"
 //#include "../SliceHistogram.hh"
   
@@ -406,3 +407,46 @@ void DrawFakeData();
 	std::vector<double> YMultipliers,
 	bool do_bin_width_norm,
 	double text_size);
+////////////////////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////////////
+/*
+void DrawStack(
+  TH2D* category_hist_input,
+  TH1D* Data_input,
+  TH1D* Total_MC_input,
+  TH1D* extBNB_input,
+  SliceHistogram* slice_bnb,
+  SliceHistogram* slice_ext,
+  SliceHistogram* slice_mc_plus_ext,
+  const Slice& slice,
+  bool makeNormWidth,
+  double SliceBinWidth,
+  double ymax,
+  double WindowZoomscale,
+  bool Plot_EXT,
+  bool Scaleall, 
+  double Scaleall_input);	
+////////////////////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////////////
+	void DrawPanelplot(std::vector<double> WindowZoomScale,
+                   std::map<Binning2D , std::string > BinStringMap,
+                   std::string x_axis_title,
+                   std::string y_axis_title,
+                   std::string Pdf_Title,
+                    double min_XAxis_GridCanvas,
+                    double max_XAxis_GridCanvas,
+                    double min_YAxis_GridCanvas,
+                    double max_YAxis_GridCanvas,
+                    std::vector<size_t> SliceBins,
+                    SliceBinning &SliceBins_input,
+                    std::map<Binning2D , double>  binwidthMap ,
+                    TH1D* reco_bnb_hist,
+                    TH1D* reco_ext_hist,
+                    TH1D* reco_mc_plus_ext_hist,
+                    TH2D* category_hist,
+                    CovMatrixMap &matrix_map,
+                    bool DoScaledown,
+                    double Scaledown,
+                    bool Plot_EXT);*/

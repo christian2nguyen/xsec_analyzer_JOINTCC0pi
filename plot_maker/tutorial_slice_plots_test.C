@@ -210,7 +210,10 @@ void DrawStack(
   bool Plot_EXT );
   
   
-void tutorial_slice_plots_withData(std::string PDFoutputName, std::string input_UnimakeFile, std::string File_property,  std::string input_Bin_config);
+void tutorial_slice_plots_withData(std::string PDFoutputName, 
+std::string input_UnimakeFile, std::string File_property,
+std::string input_Bin_config, bool turnOffChi2 ,
+bool SetUncernitytoSignalReponseOnl= false);
 void tutorial_slice_plots_NODATAPOINTS();
 void tutorial_slice_plots_2D();
 void tutorial_slice_plots_2D_withData();
@@ -257,6 +260,28 @@ void AddPlotLabel(
         const double angle = 0
       );
 
+void DrawPanelplot(std::vector<double> WindowZoomScale,
+                   std::map<Binning2D , std::string > BinStringMap,
+                   std::string x_axis_title,
+                   std::string y_axis_title,
+                   std::string Pdf_Title,
+                    double min_XAxis_GridCanvas,
+                    double max_XAxis_GridCanvas,
+                    double min_YAxis_GridCanvas,
+                    double max_YAxis_GridCanvas,
+                    std::vector<size_t> SliceBins,
+                    SliceBinning &SliceBins_input,
+                    std::map<Binning2D , double>  binwidthMap ,
+                    TH1D* reco_bnb_hist,
+                    TH1D* reco_ext_hist,
+                    TH1D* reco_mc_plus_ext_hist,
+                    TH2D* category_hist,
+                    CovMatrixMap &matrix_map,
+                    bool DoScaledown,
+                    double Scaledown,
+                    bool Plot_EXT);
+
+
 //void AddHistoTitle(
 //  const char* title,
 //  double titleSize,
@@ -264,6 +289,27 @@ void AddPlotLabel(
 //);
 
 
+/*
+void DrawStack(
+  TH2D* category_hist_input,
+  TH1D* Data_input,
+  TH1D* Total_MC_input,
+  TH1D* extBNB_input,
+  SliceHistogram* slice_bnb,
+  SliceHistogram* slice_ext,
+  SliceHistogram* slice_mc_plus_ext,
+  const Slice& slice,
+  bool makeNormWidth,
+  double SliceBinWidth,
+  double ymax,
+  double WindowZoomscale,
+  bool Plot_EXT,
+  bool Scaleall, 
+  double Scaleall_input);	
+////////////////////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////////////
+	*/
 
 void tutorial_slice_plots() {
 
@@ -1327,7 +1373,10 @@ void tutorial_slice_plots_NODATAPOINTS() {
 //////////////////////////////////////////////////////////////////////////////
 /// 
 //////////////////////////////////////////////////////////////////////////////
-void tutorial_slice_plots_withData(std::string PDFoutputName, std::string input_UnimakeFile, std::string File_property,  std::string input_Bin_config,bool turnOffChi2) {
+void tutorial_slice_plots_withData(std::string PDFoutputName,
+std::string input_UnimakeFile, std::string File_property, 
+std::string input_Bin_config, bool turnOffChi2, 
+bool SetUncernitytoSignalReponseOnly) {
 
    std::cout<<"Starting tutorial_slice_plots"<< std::endl;
   #ifdef USE_FAKE_DATA
@@ -1356,15 +1405,20 @@ void tutorial_slice_plots_withData(std::string PDFoutputName, std::string input_
   auto* syst_ptr = new MCC9SystematicsCalculator(
   //"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_12_5_2024/UnivMake_MCS_v1.root",
   input_UnimakeFile,
-  "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/systcalc_noNuWro_eventrates_nodownly.conf"
-  
-  //
+  "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/systcalc_noNuWro_eventrates_nodownly.conf" 
   //"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/Anaylzer_unimakeoutputPanos/Unimake_Ntracks_v2.root"
-    /*"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_8_16_2024/unimake_1D.root",
-    "systcalc_noNuWro_eventrates.conf"*/ );
+    /*"/exp/uboone/data/users/cnguyen/CC0Pi_Selection/EventSelection_8_16_2024/unimake_1D.root",*/
+   // "systcalc_noNuWro_eventrates.conf"
+    );
+     
+ 
   auto& syst = *syst_ptr;
   //NTracks_contained_v2.root
  //
+  if(SetUncernitytoSignalReponseOnly==true){
+  syst.set_syst_mode(MCC9SystematicsCalculator::SystMode::VaryBackgroundAndSignalDirectly );
+  }
+ 
  //UnivMake_topological_score_v3_realData.root
  //UnivMake_topological_score.root
  //UnivMake_FakeData_BDTdecided_1D_v11_addBogustosideband_noBDTproton_pmucorrection.root
@@ -4916,7 +4970,9 @@ std::cout<<" Testing Slice Plots "<< std::endl;
   std::string Plotting_Property_file = "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/file_properties_EventSelection_12_21_2024_Plotting.txt";
   std::string Bining_configFIle = "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/Muon_MCS_Panelsslice_config.txt";
 
-  tutorial_slice_plots_withData("SelectionPlots_Panel_test", inputmakeFile, Plotting_Property_file,Bining_configFIle,true);
+  tutorial_slice_plots_withData("SelectionPlots_Panel_test_new2", inputmakeFile, Plotting_Property_file,Bining_configFIle,true,true);
+  
+  
   
   //tutorial_slice_plots_2D_inclusive_withData();
   //tutorial_slice_plots_2D();
@@ -7161,3 +7217,907 @@ void IncreaseTitleTH1(TH1& hist, double input) {
     gStyle->SetTitleSize(input, "t"); // Adjust the size as needed
     gStyle->SetTitleX(0.5); // Center the title horizontally
 }
+
+//////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////
+
+void DrawPanelplot(std::vector<double> WindowZoomScale,
+                   std::map<Binning2D , std::string > BinStringMap,
+                   std::string x_axis_title,
+                   std::string y_axis_title,
+                   std::string Pdf_Title,
+                    double min_XAxis_GridCanvas,
+                    double max_XAxis_GridCanvas,
+                    double min_YAxis_GridCanvas,
+                    double max_YAxis_GridCanvas,
+                    std::vector<size_t> SliceBins,
+                    SliceBinning &SliceBins_input,
+                    std::map<Binning2D , double>  binwidthMap ,
+                    TH1D* reco_bnb_hist,
+                    TH1D* reco_ext_hist,
+                    TH1D* reco_mc_plus_ext_hist,
+                    TH2D* category_hist,
+                    CovMatrixMap &matrix_map,
+                    bool DoScaledown,
+                    double Scaledown,
+                    bool Plot_EXT){
+ GridCanvas *GC_Stack = new GridCanvas(uniq(), 3, 4, 800, 550);
+ //GridCanvas *Stack_FracError = new GridCanvas(uniq(), 3, 4, 800, 550);
+ char title_char[1024];
+  auto BinVector = GetProjectBinVector();
+   GC_Stack->SetBottomMargin(.00);
+   GC_Stack->SetTopMargin(.02);
+   GC_Stack->SetRightMargin(.01);
+   GC_Stack->SetLeftMargin(.08);
+   	TLegend* lg1_Grid= new TLegend(0.7, 0.05, 1.03, 0.44 );
+    lg1_Grid->SetNColumns(1);
+    lg1_Grid->SetBorderSize(0);
+    std::string MicroBooneTitle = MicroBooNE_LegendTitle_FullData();
+    lg1_Grid->SetHeader(MicroBooneTitle.c_str());
+	
+   
+   
+   
+   int GridBins = 0; 
+   int Vector_index = 0; 
+    for ( auto sl_idx : SliceBins  )
+  {
+    std::cout<<"SLICE : "<< sl_idx <<std::endl;
+    GridBins++; 
+    const auto& slice = SliceBins_input.slices_.at( sl_idx );
+
+    // We now have all of the reco bin space histograms that we need as input.
+    // Use them to make new histograms in slice space.
+    SliceHistogram* slice_bnb = SliceHistogram::make_slice_histogram(
+      *reco_bnb_hist, slice, &matrix_map.at("BNBstats") );
+
+    SliceHistogram* slice_ext = SliceHistogram::make_slice_histogram(
+      *reco_ext_hist, slice, &matrix_map.at("EXTstats") );
+
+    SliceHistogram* slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
+      *reco_mc_plus_ext_hist, slice, &matrix_map.at("total") );
+
+
+    //auto chi2_result = slice_bnb->get_chi2( *slice_mc_plus_ext );
+    //std::cout << "Slice " << sl_idx << ": \u03C7\u00b2 = "
+    //  << chi2_result.chi2_ << '/' << chi2_result.num_bins_ << " bins,"
+    //  << " p-value = " << chi2_result.p_value_ << '\n';
+
+
+    // Build a stack of categorized central-value MC predictions plus the
+    // extBNB contribution in slice space
+    const auto& eci = EventCategoryInterpreter::Instance();
+    eci.set_ext_histogram_style( slice_ext->hist_.get() );
+
+    THStack* slice_pred_stack = new THStack( "mc+ext", "" );
+    if(Plot_EXT == true) slice_pred_stack->Add( slice_ext->hist_.get() ); // extBNB
+     
+    if(GridBins==1){
+    lg1_Grid->AddEntry(slice_bnb->hist_.get(), "Data [Stat]", "pe" );
+    lg1_Grid->AddEntry(slice_mc_plus_ext->hist_.get(), "#muBooNE Tune [Sys+Stat]", "le" );
+    }
+
+    const auto& cat_map = eci.label_map();
+
+    // Go in reverse so that signal ends up on top. Note that this index is
+    // one-based to match the ROOT histograms
+    int cat_bin_index = cat_map.size();
+ 
+
+
+   //  std::cout<<"stack Loop removed r crbegin() crend() "<< std::endl;
+    for ( auto iter = cat_map.crbegin(); iter != cat_map.crend(); ++iter )
+    {
+      EventCategory cat = iter->first;
+      if(cat==EventCategory::kUnknown) continue;
+      TH1D* temp_mc_hist = category_hist->ProjectionY( "temp_mc_hist",
+        cat_bin_index, cat_bin_index );
+      temp_mc_hist->SetDirectory( nullptr );
+
+      SliceHistogram* temp_slice_mc = SliceHistogram::make_slice_histogram(
+        *temp_mc_hist, slice  );
+
+      eci.set_mc_histogram_style( cat, temp_slice_mc->hist_.get() );
+
+      slice_pred_stack->Add( temp_slice_mc->hist_.get() );
+      
+      if(GridBins==1){
+      std::string lg1_label = eci.label(cat);
+      lg1_Grid->AddEntry(temp_slice_mc->hist_.get(),lg1_label.c_str() , "f" );
+      }
+      
+      //std::string cat_col_prefix = "MC" + std::to_string( cat );
+
+      --cat_bin_index;
+    }
+   
+   if(GridBins==1){
+
+    sprintf(title_char, "EXT BNB "); // (%2.1f%)
+     lg1_Grid->AddEntry(slice_ext->hist_.get(),title_char , "f" );
+   }
+     
+    slice_bnb->hist_->SetLineColor( kBlack );
+    slice_bnb->hist_->SetLineWidth( 3 );
+    slice_bnb->hist_->SetMarkerStyle( kFullCircle );
+    slice_bnb->hist_->SetMarkerSize( 0.8 );
+    slice_bnb->hist_->SetStats( false );
+   
+    double ymax = std::max( slice_bnb->hist_->GetMaximum(),
+      slice_mc_plus_ext->hist_->GetMaximum() ) * 1.6;
+    slice_bnb->hist_->GetYaxis()->SetRangeUser( 0., ymax );
+    slice_bnb->hist_->GetYaxis()->SetTitle( "NEvent" );
+    slice_bnb->hist_->SetTitleOffset (1.01,"Y");
+
+
+   //  std::cout<<"printing chi values "<< std::endl;
+
+      //sprintf(textplace, "#chi^{2}/ndf = %.2f / %i",chi2_result.chi2_ , chi2_result.num_bins_ );
+      //text->DrawLatex(0.15, 0.85, textplace);
+
+      //sprintf(textplace, "p-value = %.4f",chi2_result.p_value_ );
+      //text->DrawLatex(0.15, 0.80, textplace);
+
+    //  std::cout<<"FINISHED printing chi values "<< std::endl;
+
+    // Get the binning and axis labels for the current slice by cloning the
+    // (empty) histogram owned by the Slice object
+    /////////////////////////////////////
+    // testing Drawing Function
+    ////////////////////////////////////
+    TH1D* h_bnb_input = (TH1D*)reco_bnb_hist->Clone("slice_bnb_input");
+    TH1D* h_mc_plus_ext_input = (TH1D*)reco_mc_plus_ext_hist->Clone("slice_mc_plus_ext_input");
+    TH1D* h_ext_input = (TH1D*)reco_ext_hist->Clone("slice_ext_input");
+
+    //char axisXtitle = reco_mc_plus_ext_hist->GetXaxis()->GetTitle();
+   //sprintf(axisXtitle, "%s", xaxistitles_vector.at(sl_idx).c_str());
+    double SliceBinWidth = 1.0;
+    SliceBinWidth = binwidthMap[BinVector.at(Vector_index)];
+    GC_Stack->cd(GridBins); 
+    bool Plot_EXT = true; 
+    h_bnb_input->GetYaxis()->SetNdivisions(504);
+    h_bnb_input->GetYaxis()->SetNdivisions(504);
+    h_bnb_input->GetXaxis()->SetNdivisions(505);
+    h_bnb_input->Draw();
+ 
+    DrawStack(
+      category_hist,
+      h_bnb_input,
+      h_mc_plus_ext_input,
+      h_ext_input,
+       slice_bnb,
+       slice_ext,
+       slice_mc_plus_ext,
+      slice,
+      true,
+      SliceBinWidth,
+      ymax,
+      WindowZoomScale.at(Vector_index),
+      Plot_EXT,
+      DoScaledown,
+      Scaledown
+      );
+    
+      
+    std::cout<<"Zoom In Times " << WindowZoomScale.at(Vector_index) << std::endl;
+    
+    
+     drawString(BinStringMap[BinVector.at(Vector_index)], .038, false );
+    
+    		if ( WindowZoomScale.at(Vector_index) != 1)
+		{
+			auto pad = GC_Stack->cd(GridBins);
+			TLatex *la2 = new TLatex(1 - pad->GetRightMargin() - 0.02,
+				1 - pad->GetTopMargin() - .06,
+				TString::Format("#times %.1f", WindowZoomScale.at(Vector_index)));
+			la2->SetTextAlign(33);	// top right
+			la2->SetNDC();
+			la2->SetTextFont(62);
+			la2->SetTextSize(0.04);
+			la2->Draw();
+		}
+       
+       Vector_index++;
+  }// End of Grid Loop 
+   ///////////////////////////////////////// 
+
+  GC_Stack->SetYLabel_Size(.035);
+	GC_Stack->SetXLabel_Size(.028);
+  GC_Stack->SetInterpadSpace(.006);
+	//GC_Stack->SetRightMargin(0.05);
+	//GC_Stack->SetLeftMargin(0.08);
+	  
+   GC_Stack->SetYLimits(min_YAxis_GridCanvas, max_YAxis_GridCanvas);
+   GC_Stack->SetXLimits(min_XAxis_GridCanvas, max_XAxis_GridCanvas);
+   sprintf(title_char,"%s", x_axis_title.c_str());
+   GC_Stack->SetXTitle(title_char);
+	 GC_Stack->SetYTitleSize(22);
+	 GC_Stack->SetXTitleSize(20);  
+	 sprintf(title_char,"%s", y_axis_title.c_str());
+	 GC_Stack->SetYTitle(title_char);
+	 GC_Stack->SetTitleAlignmentFor6Hist();
+	 GC_Stack->SetYTitle_offset(.1);
+   //leg->Draw("SAME");]
+   GC_Stack->Modified();
+   GC_Stack->ResetPads();
+   lg1_Grid->Draw("same");
+   sprintf(title_char, "%s.pdf", Pdf_Title.c_str());
+   GC_Stack->Print(title_char);
+   
+
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// 
+//////////////////////////////////////////////////////////////////////////////
+void tutorial_slice_PANELplots_withData(std::string PDFoutputName,
+std::string input_UnimakeFile, std::string File_property, 
+std::string input_Bin_config, bool turnOffChi2, 
+bool SetUncernitytoSignalReponseOnly,
+std::string x_axis_title,
+std::string y_axis_title,
+std::string Slice_Bin_title,
+std::vector<size_t> SliceBins,
+std::map< double, std::vector<double> > Binning_2D_Map,
+double min_XAxis_GridCanvas,
+double max_XAxis_GridCanvas,
+double min_YAxis_GridCanvas,
+double max_YAxis_GridCanvas,
+std::vector<double> WindowZoomScale) 
+{
+   std::cout<<"Starting tutorial_slice_plots"<< std::endl;
+  #ifdef USE_FAKE_DATA
+    // Initialize the FilePropertiesManager and tell it to treat the NuWro
+    // MC ntuples as if they were data
+    auto& fpm = FilePropertiesManager::Instance();
+    std::cout<<"OutPut: Path : " << fpm.analysis_path()<< std::endl;
+    
+    std::cout<<"Finished:FilePropertiesManager::Instance() "<<std::endl; 
+    std::cout<<"trying to apply load_file_properties"<< std::endl;
+   
+    std::cout<<" passed "<< std::endl;
+  #endif
+
+   fpm.load_file_properties( File_property);
+   char axisXtitle[1024];
+ std::cout<<"Starting MCC9SystematicsCalculator"<< std::endl;
+
+ 
+ 
+  //UnivMake_FakeData_BDTdecided_1D_v5_pmucorrection.root
+  auto* syst_ptr = new MCC9SystematicsCalculator(
+  input_UnimakeFile,
+  "/exp/uboone/app/users/cnguyen/stv-analysis-II/xsec_analyzer/configs/systcalc_noNuWro_eventrates_nodownly.conf");
+     
+ 
+  auto& syst = *syst_ptr;
+  //NTracks_contained_v2.root
+ //
+  if(SetUncernitytoSignalReponseOnly==true){
+  syst.set_syst_mode(MCC9SystematicsCalculator::SystMode::VaryBackgroundAndSignalDirectly );
+  }
+ 
+ std::cout<<"Finished  MCC9SystematicsCalculator "<< std::endl; 
+
+  bool Plot_EXT = true;
+
+
+  // Get access to the relevant histograms owned by the SystematicsCalculator
+  // object. These contain the reco bin counts that we need to populate the
+  // slices below.
+  TH1D* reco_bnb_hist = syst.data_hists_.at( NFT::kOnBNB ).get();
+  TH1D* reco_ext_hist = syst.data_hists_.at( NFT::kExtBNB ).get();
+   
+  std::cout<<"Total N Data = "<< reco_bnb_hist->Integral()<<std::endl;
+
+  #ifdef USE_FAKE_DATA
+    // Add the EXT to the "data" when working with fake data
+    //reco_bnb_hist->Add( reco_ext_hist ); Just remove this 
+  #endif
+
+  std::cout<<"Getting cv_universe().hist_categ_.get()"<< std::endl;
+  TH2D* category_hist = syst.cv_universe().hist_categ_.get();
+  std::cout<<"Getting cv_universe().hist_categ_.get():: FINISHed"<< std::endl;
+
+  // Total MC+EXT prediction in reco bin space. Start by getting EXT.
+  TH1D* reco_mc_plus_ext_hist = dynamic_cast< TH1D* >(
+    reco_ext_hist->Clone("reco_mc_plus_ext_hist") );
+  reco_mc_plus_ext_hist->SetDirectory( nullptr );
+   
+   std::cout<<"Finished line 1397"<< std::endl;
+
+ if(Plot_EXT == false){
+   int nBins = reco_mc_plus_ext_hist->GetNbinsX();
+     for (int i = 1; i <= nBins; ++i) {
+         reco_mc_plus_ext_hist->SetBinContent(i, 0.0);
+     }
+ }
+
+ std::cout<<"Finished line 1407"<< std::endl;
+  // Add in the CV MC prediction
+  reco_mc_plus_ext_hist->Add( syst.cv_universe().hist_reco_.get() );
+   std::cout<<"finished line 1410"<< std::endl;
+
+  // Keys are covariance matrix types, values are CovMatrix objects that
+  // represent the corresponding matrices
+     std::cout<<"starting to get  get_covariances"<< std::endl;
+  auto* matrix_map_ptr = syst.get_covariances().release();
+  auto& matrix_map = *matrix_map_ptr;
+  
+       std::cout<<"Finished"<< std::endl;
+ std::cout<<"Getting Slices"<< std::endl;
+  //auto* sb_ptr = new SliceBinning( "mybins_Muon_1D_Pmu_v3_slice_config.txt" ); //tutorial_reco_slice_config.txt //mybins_mcc8_1D_Topological_Score.txt mybins_mcc8_1D_TrackScore.txt  mybins_mcc8_1D.txt /mybins_mcc8_1D_NTracks.txt mybins_all.txt
+  auto* sb_ptr = new SliceBinning(input_Bin_config );
+  //JOINTCC0pi_Scheme1_v4slice_config.txt Muon_MCSslice_config.txt JOINTCC0pi_Scheme1_v4slice_config.txt
+  auto& sb = *sb_ptr;
+  ////////////////////////////////
+  // Starting to plot
+  //////////////////////////////////
+
+  std::cout<< " Number of Slices to Plot : "<< sb.slices_.size() << std::endl;
+
+  TCanvas *c1 = new TCanvas("c1");
+  sprintf(pdf_title, "%s.pdf(", PDFoutputName.c_str());
+  c1 -> Print(pdf_title);
+
+ auto BinVector = GetProjectBinVector();
+  for ( size_t sl_idx = 0u; sl_idx < sb.slices_.size(); ++sl_idx )
+{
+  std::cout<<"SLICE : "<< sl_idx <<std::endl;
+
+    TLegend* lg1_stacked = new TLegend( 0.35, 0.7, 0.8, 0.88 );
+    lg1_stacked->SetNColumns(2);
+    lg1_stacked->SetBorderSize(0);
+    Double_t defaultTextSize = lg1_stacked->GetTextSize();
+    //std::cout<<"set text size "<< defaultTextSize << std::endl;
+    lg1_stacked->SetTextSize(defaultTextSize*1.05); //
+    const auto& slice = sb.slices_.at( sl_idx );
+
+    // We now have all of the reco bin space histograms that we need as input.
+    // Use them to make new histograms in slice space.
+    SliceHistogram* slice_bnb = SliceHistogram::make_slice_histogram(
+      *reco_bnb_hist, slice, &matrix_map.at("BNBstats") );
+
+    SliceHistogram* slice_ext = SliceHistogram::make_slice_histogram(
+      *reco_ext_hist, slice, &matrix_map.at("EXTstats") );
+
+    SliceHistogram* slice_mc_plus_ext = SliceHistogram::make_slice_histogram(
+      *reco_mc_plus_ext_hist, slice, &matrix_map.at("total") );
+
+
+    //auto chi2_result = slice_bnb->get_chi2( *slice_mc_plus_ext );
+    //std::cout << "Slice " << sl_idx << ": \u03C7\u00b2 = "
+    //  << chi2_result.chi2_ << '/' << chi2_result.num_bins_ << " bins,"
+    //  << " p-value = " << chi2_result.p_value_ << '\n';
+
+
+
+    // Build a stack of categorized central-value MC predictions plus the
+    // extBNB contribution in slice space
+    const auto& eci = EventCategoryInterpreter::Instance();
+    eci.set_ext_histogram_style( slice_ext->hist_.get() );
+
+    THStack* slice_pred_stack = new THStack( "mc+ext", "" );
+    if(Plot_EXT == true) slice_pred_stack->Add( slice_ext->hist_.get() ); // extBNB
+
+
+    const auto& cat_map = eci.label_map();
+
+    // Go in reverse so that signal ends up on top. Note that this index is
+    // one-based to match the ROOT histograms
+    int cat_bin_index = cat_map.size();
+
+    lg1_stacked->AddEntry(slice_bnb->hist_.get(), "Data", "pe" );
+    lg1_stacked->AddEntry(slice_mc_plus_ext->hist_.get(), "Total MC", "le" );
+
+   //  std::cout<<"stack Loop removed r crbegin() crend() "<< std::endl;
+    for ( auto iter = cat_map.crbegin(); iter != cat_map.crend(); ++iter )
+    {
+      EventCategory cat = iter->first;
+      TH1D* temp_mc_hist = category_hist->ProjectionY( "temp_mc_hist",
+        cat_bin_index, cat_bin_index );
+      temp_mc_hist->SetDirectory( nullptr );
+
+      SliceHistogram* temp_slice_mc = SliceHistogram::make_slice_histogram(
+        *temp_mc_hist, slice  );
+
+      eci.set_mc_histogram_style( cat, temp_slice_mc->hist_.get() );
+
+      slice_pred_stack->Add( temp_slice_mc->hist_.get() );
+
+      std::string lg1_label = eci.label(cat);
+      lg1_stacked->AddEntry(temp_slice_mc->hist_.get(),lg1_label.c_str() , "f" );
+      std::string cat_col_prefix = "MC" + std::to_string( cat );
+
+      --cat_bin_index;
+    }
+
+
+     lg1_stacked->AddEntry(slice_ext->hist_.get(),"EXT BNB" , "f" );
+
+
+    slice_bnb->hist_->SetLineColor( kBlack );
+    slice_bnb->hist_->SetLineWidth( 3 );
+    slice_bnb->hist_->SetMarkerStyle( kFullCircle );
+    slice_bnb->hist_->SetMarkerSize( 0.8 );
+    slice_bnb->hist_->SetStats( false );
+    double ymax = std::max( slice_bnb->hist_->GetMaximum(),
+      slice_mc_plus_ext->hist_->GetMaximum() ) * 1.6;
+    slice_bnb->hist_->GetYaxis()->SetRangeUser( 0., ymax );
+    slice_bnb->hist_->GetYaxis()->SetTitle( "NEvent" );
+    slice_bnb->hist_->SetTitleOffset (1.01,"Y");
+
+    slice_bnb->hist_->Draw( "e" );
+    std::string xAxisTitle = slice_bnb->hist_->GetXaxis()->GetTitle();
+    slice_pred_stack->Draw( "hist same" );
+
+    slice_mc_plus_ext->hist_->SetLineWidth( 3 );
+    slice_mc_plus_ext->hist_->Draw( "same hist e" );
+
+    slice_bnb->hist_->Draw( "same e" );
+
+    lg1_stacked->Draw( "same" );
+   //  std::cout<<"printing chi values "<< std::endl;
+    TLatex* text = new TLatex;
+      text->SetNDC();
+      text->SetTextSize(0.03);
+      text->SetTextColor(kRed);
+      //sprintf(textplace, "#chi^{2}/ndf = %.2f / %i",chi2_result.chi2_ , chi2_result.num_bins_ );
+      //text->DrawLatex(0.15, 0.85, textplace);
+
+      //sprintf(textplace, "p-value = %.4f",chi2_result.p_value_ );
+      //text->DrawLatex(0.15, 0.80, textplace);
+      sprintf(pdf_title, "%s.pdf",  PDFoutputName.c_str());
+      c1 -> Print(pdf_title);
+    //  std::cout<<"FINISHED printing chi values "<< std::endl;
+
+    // Get the binning and axis labels for the current slice by cloning the
+    // (empty) histogram owned by the Slice object
+    /////////////////////////////////////
+    // testing Drawing Function
+    ////////////////////////////////////
+    TH1D* h_bnb_input = (TH1D*)reco_bnb_hist->Clone("slice_bnb_input");
+    TH1D* h_mc_plus_ext_input = (TH1D*)reco_mc_plus_ext_hist->Clone("slice_mc_plus_ext_input");
+    TH1D* h_ext_input = (TH1D*)reco_ext_hist->Clone("slice_ext_input");
+
+    //char axisXtitle = reco_mc_plus_ext_hist->GetXaxis()->GetTitle();
+   //sprintf(axisXtitle, "%s", xaxistitles_vector.at(sl_idx).c_str());
+    
+      sprintf(axisXtitle, "%s", xAxisTitle.c_str());
+    
+    
+   //h_bnb_input
+    double chi1,pvalue;
+    int NDF;
+
+    
+    DrawStack_WithRatio(
+      category_hist,
+      h_bnb_input,
+      h_mc_plus_ext_input,
+      h_ext_input,
+       slice_bnb,
+       slice_ext,
+       slice_mc_plus_ext,
+      slice,
+       PDFoutputName,
+      "Test",
+      axisXtitle,
+      c1,
+      ymax,
+      Plot_EXT ,
+      chi1,
+      pvalue,
+      NDF,turnOffChi2);
+    
+
+
+    c1->Clear();   
+    ////////////////////////////////////////
+    ///// Finished with First Plot
+    ////////////////////////////////////////
+
+
+    //std::cout<<"Starting Making error Plot  "<< std::endl;
+
+    TH1* slice_hist = dynamic_cast< TH1* >(
+      slice.hist_->Clone("slice_hist") );
+
+      slice_hist->SetDirectory( nullptr );
+
+    // Keys are labels, values are fractional uncertainty histograms
+    auto* fr_unc_hists = new std::map< std::string, TH1* >();
+    auto& frac_uncertainty_hists = *fr_unc_hists;
+
+    // Show fractional uncertainties computed using these covariance matrices
+    // in the ROOT plot. All configured fractional uncertainties will be
+    // included in the output pgfplots file regardless of whether they appear
+    // in this vector.
+    
+   //  std::cout<<"Looping over the various systematic uncertainties "<< std::endl;
+    int loop_count=0;
+    // Loop over the various systematic uncertainties
+    int color = 1;
+    for ( const auto& pair : matrix_map )
+      {
+      //std::cout<< "loop_count = " << loop_count<< std::endl;
+      loop_count++;
+      const auto& key = pair.first;
+      const auto& cov_matrix = pair.second;
+
+      SliceHistogram* slice_for_syst = SliceHistogram::make_slice_histogram(
+      *reco_mc_plus_ext_hist, slice, &cov_matrix );
+
+      // The SliceHistogram object already set the bin errors appropriately
+      // based on the slice covariance matrix. Just change the bin contents
+      // for the current histogram to be fractional uncertainties. Also set
+      // the "uncertainties on the uncertainties" to zero.
+      // TODO: revisit this last bit, possibly assign bin errors here
+      //std::cout<<" this loop starts for ( const auto& bin_pair : slice.bin_map_ )"<< std::endl;
+      for ( const auto& bin_pair : slice.bin_map_ )
+      {
+        int global_bin_idx = bin_pair.first;
+        double y = slice_for_syst->hist_->GetBinContent( global_bin_idx );
+        double err = slice_for_syst->hist_->GetBinError( global_bin_idx );
+        double frac = 0.;
+        if ( y > 0. ) frac = err / y;
+        slice_for_syst->hist_->SetBinContent( global_bin_idx, frac );
+        slice_for_syst->hist_->SetBinError( global_bin_idx, 0. );
+      }
+      
+      //std::cout<<" this loop Ends for ( const auto& bin_pair : slice.bin_map_ )"<< std::endl;
+      // Check whether the current covariance matrix name is present in
+      // the vector defined above this loop. If it isn't, don't bother to
+      // plot it, and just move on to the next one.
+      auto cbegin = cov_mat_keys.cbegin();
+      auto cend = cov_mat_keys.cend();
+      
+      auto iter = std::find( cbegin, cend, key );
+      if ( iter == cend ) continue;
+      //std::cout<<"Universe : "<< key<< std::endl;
+      
+      frac_uncertainty_hists[ key ] = slice_for_syst->hist_.get();
+         ++color;
+        if ( color == 3 ) color = kGreen +2;
+        if ( color == kGreen + 3) color = 4;
+        if ( color == 5 ) color = 6;
+        if ( color == 7 ) color = kYellow -2;
+        if ( color == kYellow -1 ) color = kMagenta + 2;
+        if (color == kMagenta + 3) color = kSpring - 2;
+        if (color == kSpring - 1) color = kOrange + 2;
+        if (color == kOrange + 3) color = kRed - 6;
+        if (color == kRed - 5) color = kAzure + 8;
+        if (color == kAzure + 8) color = kOrange - 3;
+      
+      
+      
+      
+      
+      slice_for_syst->hist_->SetLineColor( color );
+      slice_for_syst->hist_->SetLineWidth( 3 );
+
+    }
+
+     //TCanvas* c2 = new TCanvas;
+    TLegend* lg2 = new TLegend( 0.3, 0.65, 0.8, 0.8 );
+    lg2->SetNColumns(3);
+    lg2->SetBorderSize(0);
+    lg2->SetTextSize(.025); //
+    //Double_t defaultTextSize_lg2 = lg2->GetTextSize();
+    //std::cout<<"set text size "<< defaultTextSize_lg2 << std::endl;
+    //lg2->SetTextSize(defaultTextSize_lg2*1.05);
+
+   //  std::cout<<" trying to call frac_uncertainty_hists.at( Total Error ) " << std::endl;
+    auto* total_frac_err_hist = frac_uncertainty_hists.at( "total" );
+    //auto* total_frac_err_hist = frac_uncertainty_hists.at( "xsec_unisim" );
+    //  std::cout<<" Finshed " << std::endl;
+    //frac_uncertainty_hists.at( "BNBstats" )->SetLineStyle(2);
+    //frac_uncertainty_hists.at( "EXTstats" )->SetLineStyle(2);
+    //frac_uncertainty_hists.at( "MCstats" )->SetLineStyle(2);
+    total_frac_err_hist->SetStats( false );
+    //total_frac_err_hist->SetMaximum(total_frac_err_hist->GetMaximum() * 1.5);
+    total_frac_err_hist->SetMinimum(0.0);
+    total_frac_err_hist->SetMaximum(0.55);
+    total_frac_err_hist->SetLineColor( kBlack );
+    total_frac_err_hist->SetLineWidth( 3 );
+    total_frac_err_hist->GetXaxis()->SetTitle( axisXtitle);
+    total_frac_err_hist->GetYaxis()->SetTitle( "Fractional Error" );
+    total_frac_err_hist->SetTitle( "" );
+    total_frac_err_hist->GetYaxis()->SetLabelSize(.02);
+    total_frac_err_hist->GetXaxis()->SetLabelSize(.025);
+    total_frac_err_hist->GetXaxis()->SetTitleSize(0.035);
+    total_frac_err_hist->GetXaxis()->CenterTitle(kFALSE);
+    total_frac_err_hist->SetTitleOffset (1.01,"Y");
+    
+    total_frac_err_hist->Draw( "hist" );
+
+    lg2->AddEntry( total_frac_err_hist, "total", "l" );
+
+   //  std::cout<<"starting error leg names"<<std::endl;
+    //////////////////////////////////  
+    /// Drawing the Sysmatics 
+    //////////////////////////////////  
+    for ( auto& pair : frac_uncertainty_hists )
+    {
+      const auto& name = pair.first;
+      TH1* hist = pair.second;
+      // We already plotted the "total" one above
+      if ( name == "total" ) continue;
+
+      lg2->AddEntry( hist, name.c_str(), "l" );
+      hist->Draw( "same hist" );
+
+      std::cout << name << " frac err in bin #1 = "
+      << hist->GetBinContent( 1 )*100. << "%\n";
+    }
+    //std::cout<<"END error leg names"<<std::endl;
+    lg2->Draw( "same" );
+
+    std::cout << "Total frac error in bin #1 = "
+    << total_frac_err_hist->GetBinContent( 1 )*100. << "%\n";
+    //sprintf(pdf_title, "%s.pdf",  PDFoutputName.c_str());
+    c1 -> Print(pdf_title);
+
+
+    DrawFractionalError(
+    matrix_map,
+     cov_mat_keys,
+    reco_mc_plus_ext_hist,
+    slice,
+    axisXtitle,
+    "total",
+    .45,
+    pdf_title,
+    c1);
+    
+    
+    DrawFractionalError(
+    matrix_map,
+     cov_mat_keys_cross,
+    reco_mc_plus_ext_hist,
+    slice,
+    axisXtitle,
+    "xsec_unisim",
+    .35,
+    pdf_title,
+    c1);
+   
+    DrawFractionalError(
+    matrix_map,
+     cov_mat_keys_detVar,
+    reco_mc_plus_ext_hist,
+    slice,
+    axisXtitle,
+    "detVar_total",
+    .15,
+    pdf_title,
+    c1);
+    
+    
+    DrawFractionalError(
+    matrix_map,
+    cov_mat_key_totalsumcross,
+    reco_mc_plus_ext_hist,
+    slice,
+    axisXtitle,
+    "xsec_total",
+    .3,
+    pdf_title,
+    c1);
+
+
+  //////////////////////////////////
+  // End of slices Loop 
+  //////////////////////////////////
+
+}
+  //////////////////////////////////
+  // End of slices Loop 
+  //////////////////////////////////
+bool DoScaledown = true; 
+double Scaledown = .0001;
+//bool Plot_EXT = true;
+
+auto BinStringMap = Projection9Bins_StringMap(Binning_2D_Map, Slice_Bin_title);
+auto binwidthMap = Projection9Bins_width(Binning_2D_Map);
+
+DrawPanelplot( WindowZoomScale,
+                   BinStringMap,
+                    x_axis_title,
+                    y_axis_title,
+                   PDFoutputName,
+                     min_XAxis_GridCanvas,
+                     max_XAxis_GridCanvas,
+                     min_YAxis_GridCanvas,
+                     max_YAxis_GridCanvas,
+                    SliceBins,
+                    sb,
+                    binwidthMap,
+                     reco_bnb_hist,
+                     reco_ext_hist,
+                     reco_mc_plus_ext_hist,
+                     category_hist,
+                     matrix_map,
+                     DoScaledown,
+                     Scaledown,
+                     Plot_EXT);
+/////////////////////////////////////////////////////////
+//Panel Plots 
+////////////////////////////////////////////////////////
+
+ GridCanvas *GridCanvas_TotalFracError = new GridCanvas(uniq(), 3, 4, 800, 550);
+ TLegend* lg1_FracError_Grid= new TLegend( 0.43, 0.02, 0.96, 0.45  );
+ lg1_FracError_Grid->SetNColumns(2);
+ lg1_FracError_Grid->SetBorderSize(0);
+ 
+   GridCanvas_TotalFracError->SetBottomMargin(.00);
+   GridCanvas_TotalFracError->SetTopMargin(.02);
+   GridCanvas_TotalFracError->SetRightMargin(.01);
+   GridCanvas_TotalFracError->SetLeftMargin(.08);
+ int GridBins = 0;
+ 
+for ( auto sl_idx : SliceBins  )
+{
+   const auto& slice = sb.slices_.at( sl_idx );
+   bool FillLegend = (GridBins==0) ? true : false;
+  GridBins++;
+  
+ DrawFractionalError_GC(
+ matrix_map,
+ cov_mat_keys,
+ "total",
+ reco_mc_plus_ext_hist,
+ slice,
+ BinStringMap[BinVector.at(GridBins-1)],
+ 1.0,
+ GridCanvas_TotalFracError,
+ GridBins,
+ FillLegend, 
+ lg1_FracError_Grid, true);
+
+ }
+
+ std::cout<<"FInished"<< std::endl;
+ 
+ DrawGridCanvas(GridCanvas_TotalFracError,
+ lg1_FracError_Grid, "cos#theta_{#mu}", 
+ "Fractional Error", pdf_title,
+ .0,.333,
+ -1., 1. );
+ 
+ 
+ delete GridCanvas_TotalFracError;
+ delete lg1_FracError_Grid; 
+ ///////////////////////////
+ GridCanvas *GridCanvas_DetFracError = new GridCanvas(uniq(), 3, 4, 800, 550);
+ TLegend* lg2_FracError_Grid= new TLegend(  0.43, 0.02, 0.96, 0.45  );
+ lg2_FracError_Grid->SetNColumns(2);
+ lg2_FracError_Grid->SetBorderSize(0);
+  GridCanvas_DetFracError->SetBottomMargin(.00);
+  GridCanvas_DetFracError->SetTopMargin(.02);
+  GridCanvas_DetFracError->SetRightMargin(.01);
+  GridCanvas_DetFracError->SetLeftMargin(.08);
+  GridBins = 0;
+ for ( auto sl_idx : SliceBins  )
+{
+  const auto& slice = sb.slices_.at( sl_idx );
+  bool FillLegend = (GridBins==0) ? true : false;
+  GridBins++;
+  
+  DrawFractionalError_GC(
+  matrix_map,
+  cov_mat_keys_detVar,
+  "detVar_total",
+  reco_mc_plus_ext_hist,
+  slice,
+  BinStringMap[BinVector.at(GridBins-1)],
+  1.0,
+  GridCanvas_DetFracError,
+  GridBins,
+  FillLegend, 
+  lg2_FracError_Grid);
+  
+}
+ 
+ DrawGridCanvas(GridCanvas_DetFracError,
+ lg2_FracError_Grid, "cos#theta_{#mu}", 
+ "Fractional Error", pdf_title,
+ .0,.258,
+ -1., 1. );
+ 
+ delete GridCanvas_DetFracError;
+ delete lg2_FracError_Grid; 
+ ////////////////////////////////////////
+ GridCanvas *GridCanvas_CrossFracError = new GridCanvas(uniq(), 3, 4, 800, 550);
+ TLegend* lg3_FracError_Grid= new TLegend(  0.43, 0.02, 0.96, 0.45  );
+ lg3_FracError_Grid->SetNColumns(2);
+ lg3_FracError_Grid->SetBorderSize(0);
+  GridCanvas_CrossFracError->SetBottomMargin(.00);
+  GridCanvas_CrossFracError->SetTopMargin(.02);
+  GridCanvas_CrossFracError->SetRightMargin(.01);
+  GridCanvas_CrossFracError->SetLeftMargin(.08);
+  GridBins = 0;
+ for ( auto sl_idx : SliceBins  )
+{
+  const auto& slice = sb.slices_.at( sl_idx );
+  bool FillLegend = (sl_idx==0) ? true : false;
+  GridBins++;
+   DrawFractionalError_GC(
+   matrix_map,
+   cov_mat_keys_cross,
+   "xsec_unisim",
+   reco_mc_plus_ext_hist,
+   slice,
+   BinStringMap[BinVector.at(GridBins-1)],
+   1.0,
+   GridCanvas_CrossFracError,
+   GridBins,
+   FillLegend, 
+   lg3_FracError_Grid);
+   
+}
+ 
+ DrawGridCanvas(GridCanvas_CrossFracError,
+ lg3_FracError_Grid, "cos#theta_{#mu}", 
+ "Fractional Error", pdf_title,
+ .0,.0888,
+ -1.0, 1.0 );
+ 
+ delete GridCanvas_CrossFracError;
+ delete lg3_FracError_Grid; 
+ ////////////////////////////////////////
+ GridCanvas *GridCanvas_CrossTotalFracError = new GridCanvas(uniq(), 3, 4, 800, 550);
+ TLegend* lg4_FracError_Grid= new TLegend( 0.43, 0.02, 0.96, 0.45   );
+ lg4_FracError_Grid->SetNColumns(2);
+ lg4_FracError_Grid->SetBorderSize(0);
+ GridCanvas_CrossTotalFracError->SetBottomMargin(.00);
+ GridCanvas_CrossTotalFracError->SetTopMargin(.02);
+ GridCanvas_CrossTotalFracError->SetRightMargin(.01);
+ GridCanvas_CrossTotalFracError->SetLeftMargin(.08);
+ GridBins=0;
+ for ( auto sl_idx : SliceBins  )
+ {
+  const auto& slice = sb.slices_.at( sl_idx );
+  bool FillLegend = (sl_idx==0) ? true : false;
+  GridBins++;
+ 
+   DrawFractionalError_GC(
+   matrix_map,
+   cov_mat_key_totalsumcross,
+   "xsec_total",
+   reco_mc_plus_ext_hist,
+   slice,
+   BinStringMap[BinVector.at(GridBins-1)],
+   1.0,
+   GridCanvas_CrossTotalFracError,
+   GridBins,
+   FillLegend, 
+   lg4_FracError_Grid);
+   
+  }
+ 
+ DrawGridCanvas(GridCanvas_CrossTotalFracError,
+ lg4_FracError_Grid, "cos#theta_{#mu}", 
+ "Fractional Error", pdf_title,
+ .0,.333,
+ -1., 1.0 );
+ 
+ delete GridCanvas_CrossTotalFracError;
+ delete lg4_FracError_Grid; 
+ 
+ 
+    // ENd of 
+     /////////////////////
+     // ENd of slices 
+     ////////////////////
+
+
+  sprintf(pdf_title, "%s.pdf)",  PDFoutputName.c_str());
+  c1 -> Print(pdf_title);
+
+
+ }
+//////////////////////////////////////////////////////////////////////////////
+/// NEW FUNCTION  
+//////////////////////////////////////////////////////////////////////////////

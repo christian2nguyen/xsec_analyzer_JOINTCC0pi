@@ -14,7 +14,7 @@ void JOINTCC0Pi_BinScheme1::DefineBlocks() {
   runs_to_use_ = { 1 };
 
   // Prefix for the output bin and slice configuration text files
-  out_config_prefix_ = "JOINTCC0pi_Scheme1_v9";
+  out_config_prefix_ = "JOINTCC0pi_Scheme1_v10";
 
   // Selection to use with this binning scheme
   selection_name_ = "JOINTCC0pi";
@@ -168,7 +168,7 @@ const std::string CCNPI_SIDEBAND_SELECTION =
    std::vector<double> Pmu_binningSideband = { 0.1, 0.24, 0.3, 0.38, 0.48, 0.7, 0.85, 1.28, 1.58, 2.0};
    std::vector<double> Costheta_sideBand = {-1.00, -0.50, 0.00, 0.27,  0.45, 0.62, 0.76, 0.86, 0.94, 1.0};
    std::vector<double> proton_binningSideband = {0.25, 0.41, 0.495, 0.56, 0.62, 0.68, 0.74, 0.8, 0.87, 0.93, 1.0, 1.2};
-   std::vector<double> BTD_PredictionSideband = {0.0 ,0.5, .55,.6,.65,.7,.75,.8,.85 ,.9, .925 ,.95, .975, 1.0};
+   std::vector<double> BTD_PredictionSideband = {0.0, 0.45, .55,.6,.65,.7,.75,.8,.85 ,.9, .925 ,.95, .975, 1.0};
    std::vector<double> NPionssedges{0.5, 1.5, 2.5};
 
  branchexpr_sideband = "p3_lead_p.Mag(); GeV/c";
@@ -220,9 +220,6 @@ const std::string CCNPI_SIDEBAND_SELECTION =
   title ="BTD Muon score;";
   // the tex title "tex title; units" is used in latex format
   textitle = "BTD Muon score;";
-
-
-
 
   Block1D *b1r_sideband_BDTPrediction_muon = new Block1D(branchexpr_sideband, title, textitle, BTD_PredictionSideband, selection_reco, kSidebandRecoBin);
   vect_sideband.emplace_back(b1r_sideband_BDTPrediction_muon);

@@ -14,7 +14,7 @@ void JOINTCC0Pi_ProtonKinmatics::DefineBlocks() {
   runs_to_use_ = { 1 };
 
   // Prefix for the output bin and slice configuration text files
-  out_config_prefix_ = "JOINTCC0p_ProtonKinmatics_v5";
+  out_config_prefix_ = "JOINTCC0p_ProtonKinmatics_v6";
 
   // Selection to use with this binning scheme
   selection_name_ = "JOINTCC0pi";
@@ -41,7 +41,7 @@ void JOINTCC0Pi_ProtonKinmatics::DefineBlocks() {
 
   std::map< double, std::vector<double> > MUON_2D_leadingproton_EDGES = {
     { -1, 
-        {0.25, 0.315, 0.42, 1.0} },
+        {0.25, 0.42, 1.0} },
     { -0.5, 
         {0.25, 0.315, 0.42, 1.0} },
     { 0.0, 
